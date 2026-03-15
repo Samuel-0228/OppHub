@@ -1,27 +1,16 @@
 import React from 'react';
-import { Filter, Globe, Laptop, Building, GraduationCap, Users, Trophy, Radio, Briefcase } from 'lucide-react';
 import { Category } from '../types';
+import { cn } from '../lib/utils';
+import { Briefcase, GraduationCap, Trophy, Users, Layout, Globe, Cpu, Target, Rocket } from 'lucide-react';
 
 interface FiltersProps {
   selectedCategory: Category | 'All';
-  setSelectedCategory: (cat: Category | 'All') => void;
+  setSelectedCategory: (category: Category | 'All') => void;
   selectedField: string;
   setSelectedField: (field: string) => void;
   isRemote: boolean | null;
-  setIsRemote: (val: boolean | null) => void;
+  setIsRemote: (isRemote: boolean | null) => void;
 }
-
-const categories: { label: Category | 'All'; icon: any }[] = [
-  { label: 'All', icon: Globe },
-  { label: 'Internships', icon: Briefcase },
-  { label: 'Events', icon: Users },
-  { label: 'Competitions', icon: Trophy },
-  { label: 'Scholarships', icon: GraduationCap },
-  { label: 'Jobs', icon: Briefcase },
-  { label: 'Fellowships', icon: Radio },
-  { label: 'Conferences', icon: Users },
-  { label: 'Grants', icon: Trophy },
-];
 
 export const Filters: React.FC<FiltersProps> = ({
   selectedCategory,
@@ -29,90 +18,108 @@ export const Filters: React.FC<FiltersProps> = ({
   selectedField,
   setSelectedField,
   isRemote,
-  setIsRemote
+  setIsRemote,
 }) => {
+  const categories: { label: Category | 'All', icon: any }[] = [
+    { label: 'All', icon: Layout },
+    { label: 'Internships', icon: Briefcase },
+    { label: 'Scholarships', icon: GraduationCap },
+    { label: 'Events', icon: Trophy },
+    { label: 'Jobs', icon: Target },
+  ];
+
+  const fields = ['All', 'Technology', 'Medicine', 'Art', 'Education', 'Business', 'Law'];
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-6 sticky top-24 shadow-sm">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="font-bold text-slate-900 flex items-center gap-2">
-          <Filter className="w-4 h-4" />
-          Filters
-        </h3>
-        <button 
-          onClick={() => {
-            setSelectedCategory('All');
-            setSelectedField('All');
-            setIsRemote(null);
-          }}
-          className="text-xs text-indigo-600 font-semibold hover:underline"
-        >
-          Reset
-        </button>
+    <div className="space-y-10">
+      <div>
+        <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground mb-6 flex items-center gap-2">
+           Categories
+        </h4>
+        <div className="grid gap-2">
+          {categories.map(({ label, icon: Icon }) => (
+            <button
+              key={label}
+              onClick={() => setSelectedCategory(label)}
+              className={cn(
+                "group flex items-center gap-4 w-full p-4 rounded-2xl transition-all duration-500 border-2",
+                selectedCategory === label
+                  ? "bg-primary/5 border-primary/20 text-primary shadow-lg shadow-primary/5"
+                  : "bg-transparent border-transparent text-muted-foreground hover:bg-secondary/50"
+              )}
+            >
+              <div className={cn(
+                "p-2.5 rounded-xl transition-all duration-500",
+                selectedCategory === label ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground group-hover:bg-muted group-hover:text-foreground"
+              )}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <span className="font-bold text-sm tracking-tight">{label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="space-y-6">
-        <div>
-          <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 block">Category</label>
-          <div className="space-y-1">
-            {categories.map((cat) => (
-              <button
-                key={cat.label}
-                onClick={() => setSelectedCategory(cat.label)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
-                  selectedCategory === cat.label 
-                    ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-sm border-indigo-100 border' 
-                    : 'text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <cat.icon className={`w-4 h-4 ${selectedCategory === cat.label ? 'text-indigo-600' : 'text-slate-400'}`} />
-                {cat.label}
-              </button>
-            ))}
-          </div>
+      <div>
+        <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground mb-6">
+          Field of Interest
+        </h4>
+        <div className="flex flex-wrap gap-2">
+          {fields.map(field => (
+            <button
+              key={field}
+              onClick={() => setSelectedField(field)}
+              className={cn(
+                "px-5 py-2.5 rounded-full text-xs font-bold transition-all border-2",
+                selectedField === field
+                  ? "bg-primary text-primary-foreground border-primary shadow-xl shadow-primary/20"
+                  : "bg-secondary/50 border-transparent text-muted-foreground hover:border-border hover:bg-secondary"
+              )}
+            >
+              {field}
+            </button>
+          ))}
         </div>
+      </div>
 
-        <div>
-          <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 block">Field of Study</label>
-          <select 
-            value={selectedField}
-            onChange={(e) => setSelectedField(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+      <div>
+        <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground mb-6">
+          Working Style
+        </h4>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setIsRemote(null)}
+            className={cn(
+              "flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest border-2 transition-all",
+              isRemote === null ? "bg-primary text-primary-foreground border-primary shadow-lg" : "bg-secondary/50 border-transparent text-muted-foreground"
+            )}
           >
-            <option value="All">All Fields</option>
-            <option value="Tech">Technology</option>
-            <option value="Business">Business</option>
-            <option value="Engineering">Engineering</option>
-            <option value="Research">Research</option>
-          </select>
+            Any
+          </button>
+          <button
+            onClick={() => setIsRemote(true)}
+            className={cn(
+              "flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest border-2 transition-all",
+              isRemote === true ? "bg-primary text-primary-foreground border-primary shadow-lg" : "bg-secondary/50 border-transparent text-muted-foreground"
+            )}
+          >
+            Remote
+          </button>
         </div>
+      </div>
 
-        <div>
-          <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 block">Location Type</label>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setIsRemote(true)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold border transition-all ${
-                isRemote === true 
-                  ? 'bg-indigo-600 border-indigo-600 text-white' 
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <Laptop className="w-3.5 h-3.5" />
-              Remote
+      <div className="pt-8">
+         <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+               <Rocket className="w-16 h-16" />
+            </div>
+            <p className="text-xs font-medium text-muted-foreground leading-relaxed mb-4 relative z-10">
+               Our AI agents analyze thousands of channels daily to find the best opportunities for you.
+            </p>
+            <button className="text-xs font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2 hover:gap-3 transition-all">
+               Learn more <Globe className="w-3 h-3" />
             </button>
-            <button 
-              onClick={() => setIsRemote(false)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold border transition-all ${
-                isRemote === false 
-                  ? 'bg-indigo-600 border-indigo-600 text-white' 
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <Building className="w-3.5 h-3.5" />
-              On-site
-            </button>
-          </div>
-        </div>
+         </div>
       </div>
     </div>
   );

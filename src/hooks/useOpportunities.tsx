@@ -1,6 +1,6 @@
 import React from 'react';
 import { Opportunity } from '../types';
-import { MOCK_OPPORTUNITIES } from '../lib/mockData';
+import { mockOpportunities } from '../data/mockData';
 
 interface OpportunityContextType {
   opportunities: Opportunity[];
@@ -14,7 +14,7 @@ interface OpportunityContextType {
 export const OpportunityContext = React.createContext<OpportunityContextType | undefined>(undefined);
 
 export function OpportunityProvider({ children }: { children: React.ReactNode }) {
-  const [opportunities, setOpportunities] = React.useState<Opportunity[]>(MOCK_OPPORTUNITIES);
+  const [opportunities, setOpportunities] = React.useState<Opportunity[]>(mockOpportunities);
   const [savedIds, setSavedIds] = React.useState<string[]>([]);
   const [isAdmin, setIsAdmin] = React.useState(false);
 

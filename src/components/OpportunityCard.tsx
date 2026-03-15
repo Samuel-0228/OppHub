@@ -1,10 +1,12 @@
 import React from 'react';
 import { Opportunity } from '../types';
-import { Calendar, MapPin, Building2, ExternalLink, Bookmark, Clock, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, Building2, ExternalLink, Bookmark, Clock, ArrowRight, Zap, Sparkles, Globe, Briefcase } from 'lucide-react';
 import { formatDistanceToNow, differenceInDays } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Badge, Card } from './ui-elements';
+import { cn } from '../lib/utils';
 
 interface OpportunityCardProps {
   opportunity: Opportunity;
@@ -21,107 +23,115 @@ export const OpportunityCard: React.FC<OpportunityCardProps> = ({
   const daysLeft = differenceInDays(deadlineDate, new Date());
 
   const getDeadlineBadge = () => {
-    if (daysLeft <= 0) return { label: 'Expired', color: 'bg-slate-200 text-slate-600' };
-    if (daysLeft <= 3) return { label: 'Deadline soon', color: 'bg-red-100 text-red-700 border border-red-200' };
-    if (daysLeft <= 7) return { label: 'Closing this week', color: 'bg-amber-100 text-amber-700 border border-amber-200' };
-    return { label: 'Active', color: 'bg-emerald-100 text-emerald-700 border border-emerald-200' };
+    if (daysLeft <= 0) return { label: 'Archive', variant: 'outline' as const };
+    if (daysLeft <= 3) return { label: 'Ending soon', variant: 'default' as const };
+    return { label: 'Open Now', variant: 'accent' as const };
   };
 
   const badge = getDeadlineBadge();
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-100 transition-all duration-300 overflow-hidden flex flex-col h-full"
+    <Card 
+      className="group flex flex-col h-full bg-card hover:bg-card transition-all duration-700 p-4"
     >
-      <div className="relative h-48 overflow-hidden">
+      <div className="relative h-64 overflow-hidden rounded-[2.5rem]">
         <img 
-          src={opportunity.image || '/api/placeholder/400/200'} 
+          src={opportunity.image || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=400&auto=format&fit=crop'} 
           alt={opportunity.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105"
         />
-        <div className="absolute top-4 left-4">
-          <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-indigo-600 text-xs font-bold rounded-full shadow-sm">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
+        
+        <div className="absolute top-6 left-6 flex gap-2">
+          <Badge variant="secondary" className="bg-white/20 backdrop-blur-2xl border-white/20 text-white shadow-xl lowercase lowercase-first tracking-normal text-xs font-bold">
             {opportunity.category}
-          </span>
+          </Badge>
         </div>
+
         <button 
           onClick={(e) => {
             e.preventDefault();
             onBookmark?.(opportunity.id);
-            toast.success(isBookmarked ? 'Removed from bookmarks' : 'Opportunity saved!');
+            toast.success(isBookmarked ? 'Removed from favorites' : 'Saved to favorites');
           }}
-          className={`absolute top-4 right-4 p-2 rounded-full shadow-sm backdrop-blur-sm transition-all ${
+          className={cn(
+            "absolute top-6 right-6 p-3.5 rounded-full backdrop-blur-3xl transition-all duration-500 hover:scale-110 active:scale-90",
             isBookmarked 
-            ? 'bg-indigo-600 text-white' 
-            : 'bg-white/90 text-slate-400 hover:text-indigo-600'
-          }`}
+              ? "bg-primary text-primary-foreground shadow-2xl shadow-primary/30" 
+              : "bg-white/10 text-white border border-white/20 hover:bg-white hover:text-black"
+          )}
         >
-          <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
+          <Bookmark className={cn("w-5 h-5 transition-colors", isBookmarked ? "fill-current" : "")} />
         </button>
+
+        <div className="absolute bottom-6 left-6 flex items-center gap-2 group/verify">
+           <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary),1)]" />
+           <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.2em] group-hover/verify:text-white transition-colors">
+              Verified Intelligence
+           </span>
+        </div>
       </div>
 
-      <div className="p-5 flex-1 flex flex-col">
-        <div className="flex items-center gap-2 mb-3">
-          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${badge.color}`}>
-            {badge.label}
-          </span>
-          <span className="text-[10px] text-slate-400 flex items-center gap-1">
-            <Clock className="w-3 h-3" />
+      <div className="px-6 py-8 flex-1 flex flex-col">
+        <div className="flex items-center gap-4 mb-4">
+           <span className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.1em] flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5" />
             {formatDistanceToNow(new Date(opportunity.postedAt))} ago
           </span>
+          <div className="w-1 h-1 rounded-full bg-border" />
+          <Badge variant={badge.variant} className="text-[9px] lowercase font-bold tracking-tight px-3 py-1">
+            {badge.label}
+          </Badge>
         </div>
 
-        <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-2 mb-2">
+        <h3 className="text-2xl font-black text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-6 tracking-tighter leading-tight">
           {opportunity.title}
         </h3>
 
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-sm text-slate-600">
-            <Building2 className="w-4 h-4 text-slate-400" />
-            <span className="truncate">{opportunity.organization}</span>
+        <div className="flex items-center gap-6 mb-8">
+          <div className="flex items-center gap-2.5 text-muted-foreground group/meta">
+            <div className="p-2 bg-secondary rounded-xl transition-colors group-hover/meta:bg-primary/10 group-hover/meta:text-primary">
+              <Briefcase className="w-4 h-4" />
+            </div>
+            <span className="text-sm font-bold truncate max-w-[120px]">{opportunity.organization}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-slate-600">
-            <MapPin className="w-4 h-4 text-slate-400" />
-            <span>{opportunity.location}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-slate-600">
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <span>Deadline: {new Date(opportunity.deadline).toLocaleDateString()}</span>
+          <div className="flex items-center gap-2.5 text-muted-foreground group/meta">
+            <div className="p-2 bg-secondary rounded-xl transition-colors group-hover/meta:bg-primary/10 group-hover/meta:text-primary">
+              <MapPin className="w-4 h-4" />
+            </div>
+            <span className="text-sm font-bold">{opportunity.location}</span>
           </div>
         </div>
 
-        <p className="text-sm text-slate-500 line-clamp-2 mb-4 flex-1">
+        <p className="text-base text-muted-foreground line-clamp-2 mb-8 flex-1 leading-relaxed font-medium opacity-80 group-hover:opacity-100 transition-opacity">
           {opportunity.description}
         </p>
 
-        <div className="flex flex-wrap gap-1.5 mb-5">
-          {opportunity.tags.slice(0, 3).map(tag => (
-            <span key={tag} className="text-[11px] font-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
-              #{tag}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-auto">
+        <div className="flex items-center justify-between pt-8 border-t border-border/20 mt-auto">
           <Link 
             to={`/opportunity/${opportunity.id}`}
-            className="text-sm font-bold text-slate-900 flex items-center gap-1 group/btn"
+            className="group/btn flex items-center gap-4"
           >
-            Details
-            <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+             <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center transition-all duration-500 group-hover/btn:bg-primary group-hover/btn:text-primary-foreground group-hover/btn:rotate-[-45deg]">
+               <ArrowRight className="w-5 h-5" />
+            </div>
+            <span className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground group-hover/btn:text-foreground transition-colors">
+              Details
+            </span>
           </Link>
-          <a 
-            href={opportunity.applyLink}
-            target="_blank"
-            rel="noreferrer"
-            className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all"
-          >
-            <ExternalLink className="w-4 h-4" />
-          </a>
+          
+          <div className="flex -space-x-3 group/avatars transition-transform hover:translate-x-1">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="w-10 h-10 rounded-full border-4 border-card bg-secondary overflow-hidden shadow-lg">
+                <img src={`https://i.pravatar.cc/100?u=${opportunity.id}${i}`} alt="avatar" />
+              </div>
+            ))}
+            <div className="w-10 h-10 rounded-full border-4 border-card bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-black shadow-lg">
+              +12
+            </div>
+          </div>
         </div>
       </div>
-    </motion.div>
+    </Card>
   );
 };
