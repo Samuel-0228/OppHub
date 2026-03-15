@@ -1,158 +1,116 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Bell, Menu, User, Zap, X, ChevronRight, Sparkles, LayoutDashboard, Bookmark, Settings } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
-import { ThemeToggle } from './ThemeToggle';
-import { cn } from '../lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { Search, Bell, User, LogIn, LogOut, Menu, X, LayoutDashboard } from 'lucide-react';
+import { auth } from '../firebase';
+import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { UserProfile } from '../types';
+import { motion, AnimatePresence } from 'motion/react';
 
-export const Navbar: React.FC = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const location = useLocation();
+interface Props {
+  user: UserProfile | null;
+  onSearch: (query: string) => void;
+}
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+export const Navbar: React.FC<Props> = ({ user, onSearch }) => {
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
-  const navLinks = [
-    { name: 'Discover', path: '/', icon: Zap },
-    { name: 'Weekly', path: '/digest', icon: Sparkles },
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Saved', path: '/bookmarks', icon: Bookmark },
-  ];
+  const handleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
+  };
+
+  const handleLogout = () => signOut(auth);
 
   return (
-    <header 
-      className={cn(
-        "fixed top-0 left-0 right-0 z-[100] transition-all duration-700",
-        isScrolled ? "py-4" : "py-8"
-      )}
-    >
-      <nav className={cn(
-        "max-w-7xl mx-auto px-4 transition-all duration-700",
-        isScrolled ? "max-w-5xl" : "max-w-7xl"
-      )}>
-        <div className={cn(
-          "relative px-6 py-4 rounded-[2.5rem] flex justify-between items-center transition-all duration-700",
-          isScrolled 
-            ? "bg-card/60 backdrop-blur-3xl border border-border/50 shadow-2xl shadow-black/10" 
-            : "bg-transparent"
-        )}>
-          {/* Logo Section */}
-          <Link to="/" className="flex items-center gap-4 group relative">
-            <div className="bg-primary p-3 rounded-2xl shadow-2xl shadow-primary/30 group-hover:rotate-[360deg] transition-transform duration-1000">
-              <Zap className="w-6 h-6 text-primary-foreground fill-current" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-black text-foreground tracking-tighter leading-none">
-                OpporTunix
-              </span>
-              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/80 mt-1">
-                Intelligence
-              </span>
-            </div>
-          </Link>
+    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-black/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center gap-8">
+            <a href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                <div className="w-4 h-4 bg-white rounded-sm rotate-45" />
+              </div>
+              <span className="text-xl font-black tracking-tighter uppercase italic">OppHub</span>
+            </a>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center gap-1 bg-secondary/30 backdrop-blur-3xl border border-border/30 p-1.5 rounded-full">
-            {navLinks.map((link) => (
-              <Link 
-                key={link.path} 
-                to={link.path} 
-                className={cn(
-                  "relative px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500",
-                  location.pathname === link.path 
-                    ? "text-primary-foreground" 
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {location.pathname === link.path && (
-                  <motion.div
-                    layoutId="nav-active"
-                    className="absolute inset-0 bg-primary rounded-full -z-10 shadow-lg shadow-primary/20"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                {link.name}
-              </Link>
-            ))}
+            <div className="hidden md:flex relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-black transition-colors" />
+              <input
+                type="text"
+                placeholder="Search opportunities..."
+                onChange={(e) => onSearch(e.target.value)}
+                className="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm w-64 focus:ring-2 focus:ring-black/5 focus:bg-white transition-all outline-none"
+              />
+            </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-4">
-              <ThemeToggle />
-              <div className="w-px h-6 bg-border/50 mx-1" />
-              <button className="p-3 text-muted-foreground hover:bg-secondary rounded-2xl transition-all">
-                <Bell className="w-5 h-5" />
+          <div className="hidden md:flex items-center gap-4">
+            {user?.role === 'admin' && (
+              <a href="/admin" className="p-2 hover:bg-black/5 rounded-full transition-colors text-slate-600 hover:text-black" title="Admin Dashboard">
+                <LayoutDashboard className="w-5 h-5" />
+              </a>
+            )}
+            {user ? (
+              <div className="flex items-center gap-4">
+                <a href="/bookmarks" className="text-sm font-medium text-slate-600 hover:text-black transition-colors">Bookmarks</a>
+                <div className="flex items-center gap-3 pl-4 border-l border-black/5">
+                  <img src={user.photoURL || ''} alt="" className="w-8 h-8 rounded-full border border-black/5" />
+                  <button onClick={handleLogout} className="p-2 hover:bg-red-50 rounded-full transition-colors text-red-500">
+                    <LogOut className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={handleLogin}
+                className="flex items-center gap-2 px-6 py-2 bg-black text-white text-sm font-bold rounded-full hover:bg-black/80 transition-all active:scale-95"
+              >
+                <LogIn className="w-4 h-4" /> Sign In
               </button>
-            </div>
-            
-            <button className="relative p-1 group">
-               <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
-               <button className="relative flex items-center gap-3 bg-foreground text-background px-6 py-3.5 rounded-2xl text-sm font-black tracking-tighter hover:bg-primary hover:text-primary-foreground transition-all duration-500 shadow-2xl shadow-black/10">
-                  <User className="w-4 h-4" />
-                  <span className="hidden sm:inline">Profile</span>
-               </button>
-            </button>
+            )}
+          </div>
 
-            <button 
-              className="lg:hidden p-3.5 text-foreground bg-secondary/80 backdrop-blur-xl border border-border/50 rounded-2xl transition-all"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
+          <div className="md:hidden">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2">
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
-      </nav>
+      </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="absolute top-[100%] left-4 right-4 bg-card/95 backdrop-blur-3xl mt-4 rounded-[3rem] border border-border/50 shadow-2xl shadow-black/20 p-8 z-[200] overflow-hidden"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-white border-b border-black/5 overflow-hidden"
           >
-             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
-             <div className="space-y-4 relative z-10">
-                <div className="flex items-center justify-between mb-8 px-4">
-                  <span className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground">Menu</span>
-                  <ThemeToggle />
-                </div>
-                {navLinks.map((link) => (
-                  <Link 
-                    key={link.path} 
-                    to={link.path} 
-                    onClick={() => setIsMenuOpen(false)}
-                    className={cn(
-                      "flex items-center justify-between p-6 rounded-[2rem] transition-all duration-500",
-                      location.pathname === link.path 
-                        ? "bg-primary text-primary-foreground shadow-2xl shadow-primary/20" 
-                        : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                    )}
-                  >
-                    <div className="flex items-center gap-4">
-                       <link.icon className="w-6 h-6" />
-                       <span className="text-xl font-black tracking-tighter">{link.name}</span>
-                    </div>
-                    <ChevronRight className={cn("w-5 h-5", location.pathname === link.path ? "opacity-100" : "opacity-30")} />
-                  </Link>
-                ))}
-                
-                <div className="pt-8 mt-8 border-t border-border/50 flex flex-col gap-4">
-                   <button className="flex items-center gap-4 p-6 bg-secondary/30 rounded-[2rem] text-muted-foreground">
-                      <Settings className="w-5 h-5" />
-                      <span className="font-bold">Account Settings</span>
-                   </button>
-                </div>
-             </div>
+            <div className="px-4 pt-2 pb-6 space-y-4">
+              <input
+                type="text"
+                placeholder="Search..."
+                onChange={(e) => onSearch(e.target.value)}
+                className="w-full pl-4 pr-4 py-3 bg-slate-100 border-none rounded-xl text-sm outline-none"
+              />
+              <div className="flex flex-col gap-4">
+                {user ? (
+                  <>
+                    <a href="/bookmarks" className="text-lg font-bold">My Bookmarks</a>
+                    {user.role === 'admin' && <a href="/admin" className="text-lg font-bold">Admin Dashboard</a>}
+                    <button onClick={handleLogout} className="text-lg font-bold text-red-500 text-left">Sign Out</button>
+                  </>
+                ) : (
+                  <button onClick={handleLogin} className="w-full py-4 bg-black text-white font-bold rounded-xl">Sign In with Google</button>
+                )}
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+    </nav>
   );
 };

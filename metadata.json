@@ -1,0 +1,5 @@
+{
+  "name": "OppHub: Automated Opportunity Platform",
+  "description": "A modern platform that automatically imports, categorizes, and displays opportunities from Telegram channels using AI.",
+  "requestFramePermissions": []
+}

@@ -1,137 +1,115 @@
 import React from 'react';
 import { Opportunity } from '../types';
-import { Calendar, MapPin, Building2, ExternalLink, Bookmark, Clock, ArrowRight, Zap, Sparkles, Globe, Briefcase } from 'lucide-react';
-import { formatDistanceToNow, differenceInDays } from 'date-fns';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
-import { Badge, Card } from './ui-elements';
-import { cn } from '../lib/utils';
+import { Calendar, MapPin, Building2, ArrowRight, Bookmark, BookmarkCheck } from 'lucide-react';
+import { formatDistanceToNow, isAfter, subDays, isBefore, addDays } from 'date-fns';
+import { motion } from 'motion/react';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-interface OpportunityCardProps {
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+interface Props {
   opportunity: Opportunity;
   isBookmarked?: boolean;
   onBookmark?: (id: string) => void;
+  onClick?: (id: string) => void;
 }
 
-export const OpportunityCard: React.FC<OpportunityCardProps> = ({ 
-  opportunity, 
-  isBookmarked,
-  onBookmark 
-}) => {
-  const deadlineDate = new Date(opportunity.deadline);
-  const daysLeft = differenceInDays(deadlineDate, new Date());
-
-  const getDeadlineBadge = () => {
-    if (daysLeft <= 0) return { label: 'Archive', variant: 'outline' as const };
-    if (daysLeft <= 3) return { label: 'Ending soon', variant: 'default' as const };
-    return { label: 'Open Now', variant: 'accent' as const };
-  };
-
-  const badge = getDeadlineBadge();
+export const OpportunityCard: React.FC<Props> = ({ opportunity, isBookmarked, onBookmark, onClick }) => {
+  const deadlineDate = opportunity.deadline ? new Date(opportunity.deadline) : null;
+  const isExpired = deadlineDate && isBefore(deadlineDate, new Date());
+  const isClosingSoon = deadlineDate && !isExpired && isBefore(deadlineDate, addDays(new Date(), 3));
+  const isClosingThisWeek = deadlineDate && !isExpired && !isClosingSoon && isBefore(deadlineDate, addDays(new Date(), 7));
+  const isNew = isAfter(new Date(opportunity.createdAt), subDays(new Date(), 2));
 
   return (
-    <Card 
-      className="group flex flex-col h-full bg-card hover:bg-card transition-all duration-700 p-4"
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="group relative bg-white border border-black/5 rounded-2xl p-5 hover:shadow-md transition-all cursor-pointer"
+      onClick={() => onClick?.(opportunity.id)}
     >
-      <div className="relative h-64 overflow-hidden rounded-[2.5rem]">
-        <img 
-          src={opportunity.image || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=400&auto=format&fit=crop'} 
-          alt={opportunity.title}
-          className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
-        
-        <div className="absolute top-6 left-6 flex gap-2">
-          <Badge variant="secondary" className="bg-white/20 backdrop-blur-2xl border-white/20 text-white shadow-xl lowercase lowercase-first tracking-normal text-xs font-bold">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex flex-wrap gap-2">
+          <span className="px-3 py-1 bg-black text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
             {opportunity.category}
-          </Badge>
-        </div>
-
-        <button 
-          onClick={(e) => {
-            e.preventDefault();
-            onBookmark?.(opportunity.id);
-            toast.success(isBookmarked ? 'Removed from favorites' : 'Saved to favorites');
-          }}
-          className={cn(
-            "absolute top-6 right-6 p-3.5 rounded-full backdrop-blur-3xl transition-all duration-500 hover:scale-110 active:scale-90",
-            isBookmarked 
-              ? "bg-primary text-primary-foreground shadow-2xl shadow-primary/30" 
-              : "bg-white/10 text-white border border-white/20 hover:bg-white hover:text-black"
-          )}
-        >
-          <Bookmark className={cn("w-5 h-5 transition-colors", isBookmarked ? "fill-current" : "")} />
-        </button>
-
-        <div className="absolute bottom-6 left-6 flex items-center gap-2 group/verify">
-           <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary),1)]" />
-           <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.2em] group-hover/verify:text-white transition-colors">
-              Verified Intelligence
-           </span>
-        </div>
-      </div>
-
-      <div className="px-6 py-8 flex-1 flex flex-col">
-        <div className="flex items-center gap-4 mb-4">
-           <span className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.1em] flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5" />
-            {formatDistanceToNow(new Date(opportunity.postedAt))} ago
           </span>
-          <div className="w-1 h-1 rounded-full bg-border" />
-          <Badge variant={badge.variant} className="text-[9px] lowercase font-bold tracking-tight px-3 py-1">
-            {badge.label}
-          </Badge>
-        </div>
-
-        <h3 className="text-2xl font-black text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-6 tracking-tighter leading-tight">
-          {opportunity.title}
-        </h3>
-
-        <div className="flex items-center gap-6 mb-8">
-          <div className="flex items-center gap-2.5 text-muted-foreground group/meta">
-            <div className="p-2 bg-secondary rounded-xl transition-colors group-hover/meta:bg-primary/10 group-hover/meta:text-primary">
-              <Briefcase className="w-4 h-4" />
-            </div>
-            <span className="text-sm font-bold truncate max-w-[120px]">{opportunity.organization}</span>
-          </div>
-          <div className="flex items-center gap-2.5 text-muted-foreground group/meta">
-            <div className="p-2 bg-secondary rounded-xl transition-colors group-hover/meta:bg-primary/10 group-hover/meta:text-primary">
-              <MapPin className="w-4 h-4" />
-            </div>
-            <span className="text-sm font-bold">{opportunity.location}</span>
-          </div>
-        </div>
-
-        <p className="text-base text-muted-foreground line-clamp-2 mb-8 flex-1 leading-relaxed font-medium opacity-80 group-hover:opacity-100 transition-opacity">
-          {opportunity.description}
-        </p>
-
-        <div className="flex items-center justify-between pt-8 border-t border-border/20 mt-auto">
-          <Link 
-            to={`/opportunity/${opportunity.id}`}
-            className="group/btn flex items-center gap-4"
-          >
-             <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center transition-all duration-500 group-hover/btn:bg-primary group-hover/btn:text-primary-foreground group-hover/btn:rotate-[-45deg]">
-               <ArrowRight className="w-5 h-5" />
-            </div>
-            <span className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground group-hover/btn:text-foreground transition-colors">
-              Details
+          {isNew && (
+            <span className="px-3 py-1 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
+              New
             </span>
-          </Link>
-          
-          <div className="flex -space-x-3 group/avatars transition-transform hover:translate-x-1">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="w-10 h-10 rounded-full border-4 border-card bg-secondary overflow-hidden shadow-lg">
-                <img src={`https://i.pravatar.cc/100?u=${opportunity.id}${i}`} alt="avatar" />
-              </div>
-            ))}
-            <div className="w-10 h-10 rounded-full border-4 border-card bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-black shadow-lg">
-              +12
-            </div>
+          )}
+          {isClosingSoon && (
+            <span className="px-3 py-1 bg-red-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
+              Deadline Soon
+            </span>
+          )}
+          {isClosingThisWeek && (
+            <span className="px-3 py-1 bg-amber-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
+              Closing This Week
+            </span>
+          )}
+          {isExpired && (
+            <span className="px-3 py-1 bg-slate-400 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
+              Expired
+            </span>
+          )}
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onBookmark?.(opportunity.id);
+          }}
+          className="p-2 hover:bg-black/5 rounded-full transition-colors"
+        >
+          {isBookmarked ? (
+            <BookmarkCheck className="w-5 h-5 text-black fill-black" />
+          ) : (
+            <Bookmark className="w-5 h-5 text-black/40 group-hover:text-black" />
+          )}
+        </button>
+      </div>
+
+      <h3 className="text-xl font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-black transition-colors">
+        {opportunity.title}
+      </h3>
+
+      <div className="space-y-2 mb-4">
+        {opportunity.organization && (
+          <div className="flex items-center text-sm text-slate-500">
+            <Building2 className="w-4 h-4 mr-2" />
+            {opportunity.organization}
           </div>
+        )}
+        {opportunity.location && (
+          <div className="flex items-center text-sm text-slate-500">
+            <MapPin className="w-4 h-4 mr-2" />
+            {opportunity.location}
+          </div>
+        )}
+        {opportunity.deadline && (
+          <div className={cn("flex items-center text-sm", isExpired ? "text-red-400" : "text-slate-500")}>
+            <Calendar className="w-4 h-4 mr-2" />
+            Deadline: {new Date(opportunity.deadline).toLocaleDateString()}
+          </div>
+        )}
+      </div>
+
+      <p className="text-sm text-slate-600 line-clamp-3 mb-6 leading-relaxed">
+        {opportunity.description}
+      </p>
+
+      <div className="flex items-center justify-between pt-4 border-t border-black/5">
+        <div className="text-[10px] text-slate-400 uppercase tracking-widest font-medium">
+          Posted {formatDistanceToNow(new Date(opportunity.createdAt))} ago
+        </div>
+        <div className="flex items-center text-sm font-bold text-black group-hover:translate-x-1 transition-transform">
+          View Details <ArrowRight className="w-4 h-4 ml-1" />
         </div>
       </div>
-    </Card>
+    </motion.div>
   );
 };

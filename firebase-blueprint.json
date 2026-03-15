@@ -1,0 +1,71 @@
+{
+  "entities": {
+    "Opportunity": {
+      "title": "Opportunity",
+      "description": "A structured opportunity imported from Telegram.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "The title of the opportunity." },
+        "organization": { "type": "string", "description": "The organization offering the opportunity." },
+        "description": { "type": "string", "description": "Full description of the opportunity." },
+        "category": { 
+          "type": "string", 
+          "enum": ["Internships", "Events", "Competitions", "Scholarships", "Jobs", "Fellowships", "Conferences", "Grants", "General"],
+          "description": "The category of the opportunity."
+        },
+        "location": { "type": "string", "description": "Location (Remote/Onsite/City)." },
+        "deadline": { "type": "string", "format": "date-time", "description": "Application deadline." },
+        "applyLink": { "type": "string", "description": "Link to apply." },
+        "tags": { "type": "array", "items": { "type": "string" }, "description": "Auto-generated tags." },
+        "rawTelegramText": { "type": "string", "description": "The original text from Telegram." },
+        "isApproved": { "type": "boolean", "description": "Whether the post is approved by admin." },
+        "isFeatured": { "type": "boolean", "description": "Whether the post is pinned/featured." },
+        "viewCount": { "type": "integer", "description": "Number of views." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the post was imported." },
+        "field": { "type": "string", "description": "Field of study/work (Tech, Business, etc.)" },
+        "isRemote": { "type": "boolean", "description": "Whether the opportunity is remote." },
+        "seoArticle": { "type": "string", "description": "AI generated SEO article content." }
+      },
+      "required": ["title", "category", "isApproved", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile and permissions.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"], "description": "User role." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Bookmark": {
+      "title": "Bookmark",
+      "description": "A user's saved opportunity.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "opportunityId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "opportunityId"]
+    }
+  },
+  "firestore": {
+    "/opportunities/{opportunityId}": {
+      "schema": "Opportunity",
+      "description": "Collection of all opportunities."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles."
+    },
+    "/users/{userId}/bookmarks/{bookmarkId}": {
+      "schema": "Bookmark",
+      "description": "User's bookmarked opportunities."
+    }
+  }
+}

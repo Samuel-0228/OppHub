@@ -1,217 +1,157 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { mockOpportunities } from '../data/mockData';
-import { 
-  Calendar, MapPin, Building2, ExternalLink, Bookmark, 
-  Clock, ArrowLeft, Send, CheckCircle2, Share2, Info, Sparkles,
-  Award, Globe, ShieldCheck
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
-import { motion } from 'framer-motion';
-import { Button, Badge, Card } from '../components/ui-elements';
+import React, { useEffect, useState } from 'react';
+import { db } from '../firebase';
+import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { Opportunity } from '../types';
+import { Calendar, MapPin, Building2, Globe, ExternalLink, ArrowLeft, Share2, MessageSquare } from 'lucide-react';
+import { motion } from 'motion/react';
+import ReactMarkdown from 'react-markdown';
 
-export const OpportunityDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const opp = mockOpportunities.find(o => o.id === id);
+interface Props {
+  id: string;
+  onBack: () => void;
+}
 
-  if (!opp) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center space-y-4">
-        <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-          <Info className="w-10 h-10 text-muted-foreground" />
-        </div>
-        <h2 className="text-2xl font-bold text-foreground">Opportunity not found</h2>
-        <Button variant="primary" asChild>
-          <Link to="/">Return Home</Link>
-        </Button>
-      </div>
-    </div>
-  );
+export const OpportunityDetail: React.FC<Props> = ({ id, onBack }) => {
+  const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOpportunity = async () => {
+      const docRef = doc(db, 'opportunities', id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setOpportunity({ id: docSnap.id, ...docSnap.data() } as Opportunity);
+        // Increment view count
+        await updateDoc(docRef, { viewCount: increment(1) });
+      }
+      setLoading(false);
+    };
+    fetchOpportunity();
+  }, [id]);
+
+  if (loading) return <div className="max-w-4xl mx-auto p-12 animate-pulse space-y-8">
+    <div className="h-8 bg-slate-100 rounded w-1/4" />
+    <div className="h-12 bg-slate-100 rounded w-3/4" />
+    <div className="h-64 bg-slate-100 rounded w-full" />
+  </div>;
+
+  if (!opportunity) return <div className="text-center py-24">Opportunity not found.</div>;
 
   return (
-    <div className="min-h-screen bg-background pb-24 transition-colors duration-500">
-      {/* Hero Header Section */}
-      <div className="relative overflow-hidden border-b border-border/50 bg-card/30 backdrop-blur-3xl pt-12 pb-16 md:pt-20 md:pb-28">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
-            <Link to="/" className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-all mb-12 group">
-              <div className="p-2 bg-secondary rounded-lg group-hover:scale-110 transition-transform">
-                <ArrowLeft className="w-4 h-4 text-primary" />
-              </div>
-              Back to Discover
-            </Link>
-          </motion.div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="max-w-4xl mx-auto px-4 py-12"
+    >
+      <button
+        onClick={onBack}
+        className="flex items-center text-sm font-bold text-slate-400 hover:text-black mb-8 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" /> Back to List
+      </button>
 
-          <div className="flex flex-col lg:flex-row gap-12 items-start">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] bg-secondary flex items-center justify-center border border-border/50 shadow-2xl shadow-primary/5 p-4 overflow-hidden relative group shrink-0"
-            >
-               <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              {opp.image ? (
-                <img src={opp.image} alt={opp.organization} className="w-full h-full object-cover rounded-[1.8rem]" />
-              ) : (
-                <Building2 className="w-16 h-16 text-primary/40" />
-              )}
-            </motion.div>
+      <div className="mb-12">
+        <div className="flex flex-wrap gap-2 mb-6">
+          <span className="px-4 py-1.5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-full">
+            {opportunity.category}
+          </span>
+          {opportunity.isRemote && (
+            <span className="px-4 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-black uppercase tracking-widest rounded-full">
+              Remote
+            </span>
+          )}
+        </div>
 
-            <div className="flex-1 space-y-8">
-              <div className="flex flex-wrap gap-3">
-                <Badge variant="accent">{opp.category}</Badge>
-                <Badge variant="secondary">{opp.field}</Badge>
-                {opp.isRemote && <Badge variant="outline" className="border-emerald-500/30 text-emerald-500 bg-emerald-500/5">Remote Friendly</Badge>}
-              </div>
-              
-              <motion.h1 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-4xl md:text-6xl font-black text-foreground tracking-tight leading-[1.1]"
-              >
-                {opp.title}
-              </motion.h1>
+        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 mb-8 leading-tight">
+          {opportunity.title}
+        </h1>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-muted-foreground font-semibold">
-                <div className="flex items-center gap-3 bg-secondary/30 p-3 rounded-2xl border border-border/50">
-                  <Building2 className="w-5 h-5 text-primary" />
-                  <span className="text-sm">{opp.organization}</span>
-                </div>
-                <div className="flex items-center gap-3 bg-secondary/30 p-3 rounded-2xl border border-border/50">
-                  <MapPin className="w-5 h-5 text-primary" />
-                  <span className="text-sm">{opp.location}</span>
-                </div>
-                <div className="flex items-center gap-3 bg-secondary/30 p-3 rounded-2xl border border-border/50">
-                  <Clock className="w-5 h-5 text-primary" />
-                  <span className="text-sm">Deadline: {format(new Date(opp.deadline), 'MMM dd, yyyy')}</span>
-                </div>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 bg-slate-50 rounded-3xl border border-black/5">
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Organization</span>
+            <div className="flex items-center font-bold text-slate-900">
+              <Building2 className="w-4 h-4 mr-2 text-slate-400" /> {opportunity.organization || 'N/A'}
             </div>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="w-full lg:w-auto flex flex-col gap-4"
-            >
-              <Button 
-                size="lg"
-                onClick={() => toast.success('Opportunity saved to your dashboard!')}
-                variant="outline"
-                className="w-full h-16 rounded-2xl text-base font-bold gap-3 border-border/60 hover:border-primary"
-              >
-                <Bookmark className="w-5 h-5" />
-                Save for Later
-              </Button>
-              <a 
-                href={opp.applyLink}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full flex items-center justify-center gap-3 bg-primary text-primary-foreground h-16 px-10 rounded-2xl text-lg font-bold hover:opacity-90 transition-all shadow-xl shadow-primary/25"
-              >
-                Apply Directly
-                <ExternalLink className="w-5 h-5" />
-              </a>
-            </motion.div>
+          </div>
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Location</span>
+            <div className="flex items-center font-bold text-slate-900">
+              <MapPin className="w-4 h-4 mr-2 text-slate-400" /> {opportunity.location || 'N/A'}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Deadline</span>
+            <div className="flex items-center font-bold text-slate-900">
+              <Calendar className="w-4 h-4 mr-2 text-slate-400" /> {opportunity.deadline ? new Date(opportunity.deadline).toLocaleDateString() : 'N/A'}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content Body */}
-      <div className="max-w-7xl mx-auto px-4 mt-16">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-          <div className="lg:col-span-2 space-y-12">
-            <section className="bg-card/40 border border-border/50 p-8 md:p-12 rounded-[2.5rem] shadow-xl shadow-black/5">
-              <h2 className="text-2xl font-bold text-foreground mb-8 flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <Info className="w-5 h-5 text-primary" />
-                </div>
-                Detailed Description
-              </h2>
-              <div className="text-muted-foreground leading-[1.8] text-lg space-y-6">
-                <p>{opp.description}</p>
-                <p>The {opp.organization} is looking for highly motivated individuals who are passionate about {opp.field}. This opportunity provides a unique platform to develop professional skills and network with industry leaders.</p>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="lg:col-span-8 space-y-12">
+          <section>
+            <h2 className="text-xl font-black uppercase tracking-tight mb-6 flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" /> Description
+            </h2>
+            <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed whitespace-pre-wrap">
+              {opportunity.description}
+            </div>
+          </section>
 
-              <div className="mt-12 pt-12 border-t border-border/50">
-                <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-accent" />
-                  Key Highlights
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                   <HighlightItem icon={<Globe className="w-4 h-4" />} text="Global Exposure" />
-                   <HighlightItem icon={<ShieldCheck className="w-4 h-4" />} text="Verified Poster" />
-                   <HighlightItem icon={<Award className="w-4 h-4" />} text="Certificate Included" />
-                   <HighlightItem icon={<Sparkles className="w-4 h-4" />} text="AI-Matched for You" />
-                </div>
+          {opportunity.seoArticle && (
+            <section className="p-8 bg-black text-white rounded-3xl">
+              <h2 className="text-xl font-black uppercase tracking-tight mb-6 text-amber-400">
+                Application Guide & Tips
+              </h2>
+              <div className="prose prose-invert max-w-none text-slate-300">
+                <ReactMarkdown>{opportunity.seoArticle}</ReactMarkdown>
               </div>
             </section>
+          )}
 
-            <section className="bg-card/40 border border-border/50 p-8 md:p-12 rounded-[2.5rem] shadow-xl shadow-black/5">
-              <h2 className="text-2xl font-bold text-foreground mb-8 flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <Share2 className="w-5 h-5 text-primary" />
-                </div>
-                Spread the Word
-              </h2>
-              <p className="text-muted-foreground mb-8">Know someone who would be a perfect fit? Help them find their next big move.</p>
-              <div className="flex flex-wrap gap-4">
-                <Button variant="secondary" className="rounded-xl font-bold">Copy Link</Button>
-                <Button variant="secondary" className="rounded-xl font-bold">Share to LinkedIn</Button>
-                <Button variant="secondary" className="rounded-xl font-bold">Twitter / X</Button>
-              </div>
-            </section>
-          </div>
+          <section className="p-8 border-2 border-dashed border-slate-200 rounded-3xl text-center">
+            <h3 className="text-lg font-bold mb-2">Join our Telegram Community</h3>
+            <p className="text-slate-500 mb-6">Get real-time updates and more opportunities like this.</p>
+            <a
+              href="https://t.me/your_channel"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-8 py-3 bg-[#0088cc] text-white font-bold rounded-full hover:bg-[#0077b5] transition-all"
+            >
+              Join Telegram Channel
+            </a>
+          </section>
+        </div>
 
-          <aside className="space-y-8">
-            <div className="bg-primary rounded-[2.5rem] p-10 text-primary-foreground shadow-2xl shadow-primary/30 sticky top-28 overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 blur-[60px] rounded-full -mr-20 -mt-20" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 blur-[40px] rounded-full -ml-16 -mb-16" />
-              
-              <div className="relative z-10 space-y-8">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-8">
-                  <Send className="w-8 h-8 text-white shadow-lg" />
-                </div>
-                <h3 className="text-2xl font-black leading-tight">Stay ahead <br /> of the curve.</h3>
-                <p className="text-primary-foreground/80 leading-relaxed font-medium">
-                  Join 50,000+ humans getting daily opportunity alerts directly from Telegram networks.
-                </p>
-                <a 
-                  href="https://t.me/yourchannel"
-                  className="block w-full text-center bg-white text-primary font-black py-5 rounded-2xl hover:scale-[1.02] transition-all shadow-xl shadow-black/10 text-lg uppercase tracking-wider"
-                >
-                  Join Telegram Now
-                </a>
-                <p className="text-center text-[10px] uppercase font-bold tracking-widest opacity-60">100% Free • No Spam • Real-time</p>
+        <div className="lg:col-span-4">
+          <div className="sticky top-24 space-y-6">
+            <a
+              href={opportunity.applyLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 py-4 bg-black text-white font-black uppercase tracking-widest rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-black/10 active:scale-95"
+            >
+              Apply Now <ExternalLink className="w-4 h-4" />
+            </a>
+            
+            <button className="w-full flex items-center justify-center gap-2 py-4 bg-white border border-black/5 text-slate-900 font-bold rounded-2xl hover:bg-slate-50 transition-all">
+              <Share2 className="w-4 h-4" /> Share Opportunity
+            </button>
+
+            <div className="p-6 bg-slate-50 rounded-2xl border border-black/5">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Tags</h4>
+              <div className="flex flex-wrap gap-2">
+                {opportunity.tags?.map(tag => (
+                  <span key={tag} className="px-3 py-1 bg-white border border-black/5 text-[10px] font-bold text-slate-600 rounded-full">
+                    #{tag}
+                  </span>
+                ))}
               </div>
             </div>
-
-            <Card className="p-8 rounded-[2rem] border-border/40">
-               <h4 className="font-bold mb-6">Related Skills</h4>
-               <div className="flex flex-wrap gap-2">
-                 {opp.tags.map(tag => (
-                   <span key={tag} className="px-3 py-1.5 bg-secondary rounded-lg text-xs font-bold text-muted-foreground border border-border/50 hover:text-primary transition-colors cursor-default">
-                     #{tag}
-                   </span>
-                 ))}
-               </div>
-            </Card>
-          </aside>
+          </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
-
-const HighlightItem = ({ icon, text }: { icon: React.ReactNode, text: string }) => (
-  <div className="flex items-center gap-3 p-4 bg-background/50 rounded-2xl border border-border/40">
-    <div className="p-2 bg-primary/5 rounded-lg text-primary">
-      {icon}
-    </div>
-    <span className="text-sm font-bold text-foreground">{text}</span>
-  </div>
-);
