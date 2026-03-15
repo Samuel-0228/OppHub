@@ -8,12 +8,13 @@ import { Home } from './pages/Home';
 import { OpportunityDetail } from './pages/OpportunityDetail';
 import { Admin } from './pages/Admin';
 import { Bookmarks } from './pages/Bookmarks';
+import { WeeklyDigest } from './pages/WeeklyDigest';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState<'home' | 'detail' | 'admin' | 'bookmarks'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'detail' | 'admin' | 'bookmarks' | 'weekly-digest'>('home');
   const [selectedOpportunityId, setSelectedOpportunityId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -53,6 +54,7 @@ export default function App() {
     const path = window.location.pathname;
     if (path === '/admin') setCurrentPage('admin');
     else if (path === '/bookmarks') setCurrentPage('bookmarks');
+    else if (path === '/weekly-digest') setCurrentPage('weekly-digest');
     else if (path.startsWith('/opportunity/')) {
       const id = path.split('/')[2];
       setSelectedOpportunityId(id);
@@ -62,7 +64,7 @@ export default function App() {
     }
   }, []);
 
-  const navigate = (page: 'home' | 'detail' | 'admin' | 'bookmarks', id?: string) => {
+  const navigate = (page: 'home' | 'detail' | 'admin' | 'bookmarks' | 'weekly-digest', id?: string) => {
     setCurrentPage(page);
     if (id) setSelectedOpportunityId(id);
     
@@ -137,6 +139,20 @@ export default function App() {
               exit={{ opacity: 0 }}
             >
               <Bookmarks 
+                user={user} 
+                onSelectOpportunity={(id) => navigate('detail', id)} 
+              />
+            </motion.div>
+          )}
+
+          {currentPage === 'weekly-digest' && (
+            <motion.div
+              key="weekly-digest"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <WeeklyDigest 
                 user={user} 
                 onSelectOpportunity={(id) => navigate('detail', id)} 
               />

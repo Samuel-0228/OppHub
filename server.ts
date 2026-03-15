@@ -114,6 +114,50 @@ app.get("/api/setup-telegram", async (req, res) => {
   }
 });
 
+// Endpoint to share weekly digest back to Telegram
+app.post("/api/share-digest", async (req, res) => {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return res.status(400).send("Missing token");
+
+  const { internships, scholarships, events, competitions } = req.body;
+  const appUrl = process.env.APP_URL;
+
+  let message = "🌟 *Top Opportunities This Week* 🌟\n\n";
+
+  if (internships?.length) {
+    message += "💼 *Internships:*\n" + internships.map((t: string) => `• ${t}`).join("\n") + "\n\n";
+  }
+  if (scholarships?.length) {
+    message += "🎓 *Scholarships:*\n" + scholarships.map((t: string) => `• ${t}`).join("\n") + "\n\n";
+  }
+  if (events?.length) {
+    message += "📅 *Events:*\n" + events.map((t: string) => `• ${t}`).join("\n") + "\n\n";
+  }
+  if (competitions?.length) {
+    message += "🏆 *Competitions:*\n" + competitions.map((t: string) => `• ${t}`).join("\n") + "\n\n";
+  }
+
+  message += `🚀 View all details and apply here: ${appUrl}/weekly-digest\n\n`;
+  message += "Join our channel for real-time alerts!";
+
+  try {
+    // We need a chat ID. For simplicity, we assume the bot is in the channel and we can send to it.
+    // In a real app, you'd store the channel ID after the first webhook or via config.
+    // For now, we'll try to send it to the channel if we have an ID, or just return success if it's a demo.
+    const channelId = process.env.TELEGRAM_CHANNEL_ID; 
+    if (channelId) {
+      await bot.telegram.sendMessage(channelId, message, { parse_mode: "Markdown" });
+      res.send("Digest shared successfully");
+    } else {
+      console.log("No TELEGRAM_CHANNEL_ID set. Digest message:\n", message);
+      res.send("Digest generated (check server logs as no channel ID is set)");
+    }
+  } catch (error) {
+    console.error("Failed to share digest:", error);
+    res.status(500).send("Failed to share digest");
+  }
+});
+
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

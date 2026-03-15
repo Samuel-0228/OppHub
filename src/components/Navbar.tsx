@@ -48,6 +48,7 @@ export const Navbar: React.FC<Props> = ({ user, onSearch }) => {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
+            <a href="/weekly-digest" className="text-sm font-medium text-slate-600 hover:text-black transition-colors">Weekly Digest</a>
             {user?.role === 'admin' && (
               <a href="/admin" className="p-2 hover:bg-black/5 rounded-full transition-colors text-slate-600 hover:text-black" title="Admin Dashboard">
                 <LayoutDashboard className="w-5 h-5" />
@@ -97,6 +98,7 @@ export const Navbar: React.FC<Props> = ({ user, onSearch }) => {
                 className="w-full pl-4 pr-4 py-3 bg-slate-100 border-none rounded-xl text-sm outline-none"
               />
               <div className="flex flex-col gap-4">
+                <a href="/weekly-digest" className="text-lg font-bold">Weekly Digest</a>
                 {user ? (
                   <>
                     <a href="/bookmarks" className="text-lg font-bold">My Bookmarks</a>
