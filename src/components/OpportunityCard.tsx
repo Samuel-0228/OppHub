@@ -29,32 +29,22 @@ export const OpportunityCard: React.FC<Props> = ({ opportunity, isBookmarked, on
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group relative bg-white border border-black/5 rounded-2xl p-5 hover:shadow-md transition-all cursor-pointer"
+      className="group relative sloth-card p-8 cursor-pointer overflow-hidden"
       onClick={() => onClick?.(opportunity.id)}
     >
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start mb-6">
         <div className="flex flex-wrap gap-2">
-          <span className="px-3 py-1 bg-black text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
+          <span className="px-4 py-1.5 bg-ink text-paper text-[10px] font-display font-bold uppercase tracking-widest rounded-full">
             {opportunity.category}
           </span>
           {isNew && (
-            <span className="px-3 py-1 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
+            <span className="px-4 py-1.5 bg-accent text-ink text-[10px] font-display font-bold uppercase tracking-widest rounded-full">
               New
             </span>
           )}
           {isClosingSoon && (
-            <span className="px-3 py-1 bg-red-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
+            <span className="px-4 py-1.5 bg-red-500 text-white text-[10px] font-display font-bold uppercase tracking-widest rounded-full">
               Deadline Soon
-            </span>
-          )}
-          {isClosingThisWeek && (
-            <span className="px-3 py-1 bg-amber-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
-              Closing This Week
-            </span>
-          )}
-          {isExpired && (
-            <span className="px-3 py-1 bg-slate-400 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
-              Expired
             </span>
           )}
         </div>
@@ -63,51 +53,51 @@ export const OpportunityCard: React.FC<Props> = ({ opportunity, isBookmarked, on
             e.stopPropagation();
             onBookmark?.(opportunity.id);
           }}
-          className="p-2 hover:bg-black/5 rounded-full transition-colors"
+          className="p-3 hover:bg-ink/5 rounded-full transition-all active:scale-90"
         >
           {isBookmarked ? (
-            <BookmarkCheck className="w-5 h-5 text-black fill-black" />
+            <BookmarkCheck className="w-5 h-5 text-ink fill-ink" />
           ) : (
-            <Bookmark className="w-5 h-5 text-black/40 group-hover:text-black" />
+            <Bookmark className="w-5 h-5 text-ink/20 group-hover:text-ink transition-colors" />
           )}
         </button>
       </div>
 
-      <h3 className="text-xl font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-black transition-colors">
+      <h3 className="text-2xl font-serif font-bold text-ink mb-4 line-clamp-2 leading-tight group-hover:text-accent transition-colors">
         {opportunity.title}
       </h3>
 
-      <div className="space-y-2 mb-4">
+      <div className="grid grid-cols-1 gap-3 mb-8">
         {opportunity.organization && (
-          <div className="flex items-center text-sm text-slate-500">
-            <Building2 className="w-4 h-4 mr-2" />
+          <div className="flex items-center text-xs font-display font-medium text-ink/40 uppercase tracking-wider">
+            <Building2 className="w-3.5 h-3.5 mr-2 opacity-50" />
             {opportunity.organization}
           </div>
         )}
         {opportunity.location && (
-          <div className="flex items-center text-sm text-slate-500">
-            <MapPin className="w-4 h-4 mr-2" />
+          <div className="flex items-center text-xs font-display font-medium text-ink/40 uppercase tracking-wider">
+            <MapPin className="w-3.5 h-3.5 mr-2 opacity-50" />
             {opportunity.location}
           </div>
         )}
         {opportunity.deadline && (
-          <div className={cn("flex items-center text-sm", isExpired ? "text-red-400" : "text-slate-500")}>
-            <Calendar className="w-4 h-4 mr-2" />
-            Deadline: {new Date(opportunity.deadline).toLocaleDateString()}
+          <div className={cn("flex items-center text-xs font-display font-medium uppercase tracking-wider", isExpired ? "text-red-400" : "text-ink/40")}>
+            <Calendar className="w-3.5 h-3.5 mr-2 opacity-50" />
+            {new Date(opportunity.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
           </div>
         )}
       </div>
 
-      <p className="text-sm text-slate-600 line-clamp-3 mb-6 leading-relaxed">
+      <p className="text-base text-ink/60 line-clamp-3 mb-10 leading-relaxed font-sans font-light">
         {opportunity.description}
       </p>
 
-      <div className="flex items-center justify-between pt-4 border-t border-black/5">
-        <div className="text-[10px] text-slate-400 uppercase tracking-widest font-medium">
-          Posted {formatDistanceToNow(new Date(opportunity.createdAt))} ago
+      <div className="flex items-center justify-between pt-6 border-t border-ink/5">
+        <div className="text-[10px] text-ink/30 uppercase tracking-[0.2em] font-display font-bold">
+          {formatDistanceToNow(new Date(opportunity.createdAt))} ago
         </div>
-        <div className="flex items-center text-sm font-bold text-black group-hover:translate-x-1 transition-transform">
-          View Details <ArrowRight className="w-4 h-4 ml-1" />
+        <div className="flex items-center text-xs font-display font-bold text-ink uppercase tracking-widest group-hover:translate-x-2 transition-transform">
+          Details <ArrowRight className="w-4 h-4 ml-2" />
         </div>
       </div>
     </motion.div>

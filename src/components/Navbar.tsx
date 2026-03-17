@@ -25,41 +25,41 @@ export const Navbar: React.FC<Props> = ({ user, onSearch }) => {
   const handleLogout = () => signOut(auth);
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-black/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center gap-8">
-            <a href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                <div className="w-4 h-4 bg-white rounded-sm rotate-45" />
+    <nav className="sticky top-0 z-50 bg-paper/80 backdrop-blur-xl border-b border-ink/5">
+      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12">
+        <div className="flex justify-between items-center h-24">
+          <div className="flex items-center gap-12">
+            <a href="/" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 bg-ink rounded-full flex items-center justify-center transition-transform group-hover:rotate-12">
+                <div className="w-5 h-5 bg-paper rounded-sm rotate-45" />
               </div>
-              <span className="text-xl font-black tracking-tighter uppercase italic">OppHub</span>
+              <span className="text-2xl font-serif italic font-bold tracking-tight">OppHub</span>
             </a>
 
-            <div className="hidden md:flex relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-black transition-colors" />
+            <div className="hidden lg:flex relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink/30 group-focus-within:text-ink transition-colors" />
               <input
                 type="text"
                 placeholder="Search opportunities..."
                 onChange={(e) => onSearch(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm w-64 focus:ring-2 focus:ring-black/5 focus:bg-white transition-all outline-none"
+                className="pl-12 pr-6 py-3 bg-ink/5 border-none rounded-full text-sm w-80 focus:ring-1 focus:ring-ink/10 focus:bg-white transition-all outline-none font-display"
               />
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-4">
-            <a href="/weekly-digest" className="text-sm font-medium text-slate-600 hover:text-black transition-colors">Weekly Digest</a>
+          <div className="hidden md:flex items-center gap-8">
+            <a href="/weekly-digest" className="text-sm font-display font-medium text-ink/60 hover:text-ink transition-colors uppercase tracking-widest">Weekly Digest</a>
             {user?.role === 'admin' && (
-              <a href="/admin" className="p-2 hover:bg-black/5 rounded-full transition-colors text-slate-600 hover:text-black" title="Admin Dashboard">
+              <a href="/admin" className="p-3 hover:bg-ink/5 rounded-full transition-colors text-ink/60 hover:text-ink" title="Admin Dashboard">
                 <LayoutDashboard className="w-5 h-5" />
               </a>
             )}
             {user ? (
-              <div className="flex items-center gap-4">
-                <a href="/bookmarks" className="text-sm font-medium text-slate-600 hover:text-black transition-colors">Bookmarks</a>
-                <div className="flex items-center gap-3 pl-4 border-l border-black/5">
-                  <img src={user.photoURL || ''} alt="" className="w-8 h-8 rounded-full border border-black/5" />
-                  <button onClick={handleLogout} className="p-2 hover:bg-red-50 rounded-full transition-colors text-red-500">
+              <div className="flex items-center gap-6">
+                <a href="/bookmarks" className="text-sm font-display font-medium text-ink/60 hover:text-ink transition-colors uppercase tracking-widest">Bookmarks</a>
+                <div className="flex items-center gap-4 pl-6 border-l border-ink/10">
+                  <img src={user.photoURL || ''} alt="" className="w-10 h-10 rounded-full border border-ink/10 grayscale hover:grayscale-0 transition-all cursor-pointer" />
+                  <button onClick={handleLogout} className="p-3 hover:bg-red-50 rounded-full transition-colors text-red-400 hover:text-red-600">
                     <LogOut className="w-5 h-5" />
                   </button>
                 </div>
@@ -67,15 +67,15 @@ export const Navbar: React.FC<Props> = ({ user, onSearch }) => {
             ) : (
               <button
                 onClick={handleLogin}
-                className="flex items-center gap-2 px-6 py-2 bg-black text-white text-sm font-bold rounded-full hover:bg-black/80 transition-all active:scale-95"
+                className="btn-primary !py-3 !px-6 text-sm"
               >
-                <LogIn className="w-4 h-4" /> Sign In
+                Sign In
               </button>
             )}
           </div>
 
           <div className="md:hidden">
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-3 bg-ink/5 rounded-full">
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>

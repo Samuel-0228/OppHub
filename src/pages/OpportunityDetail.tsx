@@ -41,109 +41,110 @@ export const OpportunityDetail: React.FC<Props> = ({ id, onBack }) => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-4xl mx-auto px-4 py-12"
+      className="max-w-5xl mx-auto px-6 sm:px-10 lg:px-12 py-16"
     >
       <button
         onClick={onBack}
-        className="flex items-center text-sm font-bold text-slate-400 hover:text-black mb-8 transition-colors"
+        className="group flex items-center text-xs font-display font-bold text-ink/30 hover:text-ink mb-12 transition-colors uppercase tracking-[0.2em]"
       >
-        <ArrowLeft className="w-4 h-4 mr-2" /> Back to List
+        <ArrowLeft className="w-4 h-4 mr-3 transition-transform group-hover:-translate-x-1" /> Back to List
       </button>
 
-      <div className="mb-12">
-        <div className="flex flex-wrap gap-2 mb-6">
-          <span className="px-4 py-1.5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-full">
+      <div className="mb-20">
+        <div className="flex flex-wrap gap-3 mb-10">
+          <span className="px-5 py-2 bg-ink text-paper text-[10px] font-display font-bold uppercase tracking-[0.2em] rounded-full">
             {opportunity.category}
           </span>
           {opportunity.isRemote && (
-            <span className="px-4 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-black uppercase tracking-widest rounded-full">
-              Remote
+            <span className="px-5 py-2 bg-accent/10 text-accent text-[10px] font-display font-bold uppercase tracking-[0.2em] rounded-full">
+              Remote Available
             </span>
           )}
         </div>
 
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 mb-8 leading-tight">
+        <h1 className="text-5xl md:text-7xl font-serif font-bold text-ink mb-12 leading-[1.1] tracking-tight">
           {opportunity.title}
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 bg-slate-50 rounded-3xl border border-black/5">
-          <div className="space-y-1">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Organization</span>
-            <div className="flex items-center font-bold text-slate-900">
-              <Building2 className="w-4 h-4 mr-2 text-slate-400" /> {opportunity.organization || 'N/A'}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 sloth-card overflow-hidden">
+          <div className="p-10 border-r border-ink/5">
+            <span className="text-[10px] font-display font-bold uppercase tracking-[0.3em] text-ink/30 block mb-4">Organization</span>
+            <div className="flex items-center font-serif text-2xl font-bold text-ink">
+              <Building2 className="w-5 h-5 mr-3 text-accent" /> {opportunity.organization || 'N/A'}
             </div>
           </div>
-          <div className="space-y-1">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Location</span>
-            <div className="flex items-center font-bold text-slate-900">
-              <MapPin className="w-4 h-4 mr-2 text-slate-400" /> {opportunity.location || 'N/A'}
+          <div className="p-10 border-r border-ink/5">
+            <span className="text-[10px] font-display font-bold uppercase tracking-[0.3em] text-ink/30 block mb-4">Location</span>
+            <div className="flex items-center font-serif text-2xl font-bold text-ink">
+              <MapPin className="w-5 h-5 mr-3 text-accent" /> {opportunity.location || 'N/A'}
             </div>
           </div>
-          <div className="space-y-1">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Deadline</span>
-            <div className="flex items-center font-bold text-slate-900">
-              <Calendar className="w-4 h-4 mr-2 text-slate-400" /> {opportunity.deadline ? new Date(opportunity.deadline).toLocaleDateString() : 'N/A'}
+          <div className="p-10">
+            <span className="text-[10px] font-display font-bold uppercase tracking-[0.3em] text-ink/30 block mb-4">Deadline</span>
+            <div className="flex items-center font-serif text-2xl font-bold text-ink">
+              <Calendar className="w-5 h-5 mr-3 text-accent" /> {opportunity.deadline ? new Date(opportunity.deadline).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }) : 'Open'}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <div className="lg:col-span-8 space-y-12">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
+        <div className="lg:col-span-8 space-y-20">
           <section>
-            <h2 className="text-xl font-black uppercase tracking-tight mb-6 flex items-center gap-2">
-              <MessageSquare className="w-5 h-5" /> Description
+            <h2 className="text-[10px] font-display font-bold uppercase tracking-[0.4em] text-ink/30 mb-10 flex items-center gap-3">
+              <div className="w-1.5 h-1.5 bg-accent rounded-full" /> Description
             </h2>
-            <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed whitespace-pre-wrap">
+            <div className="prose prose-lg max-w-none text-ink/70 leading-relaxed font-sans font-light whitespace-pre-wrap">
               {opportunity.description}
             </div>
           </section>
 
           {opportunity.seoArticle && (
-            <section className="p-8 bg-black text-white rounded-3xl">
-              <h2 className="text-xl font-black uppercase tracking-tight mb-6 text-amber-400">
-                Application Guide & Tips
+            <section className="p-12 bg-earth text-paper rounded-[3rem] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl -mr-32 -mt-32" />
+              <h2 className="text-3xl font-serif font-bold mb-10 text-accent">
+                Application Guide
               </h2>
-              <div className="prose prose-invert max-w-none text-slate-300">
+              <div className="prose prose-invert prose-lg max-w-none text-paper/80 font-sans font-light">
                 <ReactMarkdown>{opportunity.seoArticle}</ReactMarkdown>
               </div>
             </section>
           )}
 
-          <section className="p-8 border-2 border-dashed border-slate-200 rounded-3xl text-center">
-            <h3 className="text-lg font-bold mb-2">Join our Telegram Community</h3>
-            <p className="text-slate-500 mb-6">Get real-time updates and more opportunities like this.</p>
+          <section className="p-12 bg-accent/5 rounded-[3rem] text-center border border-accent/10">
+            <h3 className="text-2xl font-serif font-bold text-ink mb-4">Join our Telegram Community</h3>
+            <p className="text-ink/50 font-display uppercase tracking-widest text-xs mb-10">Get real-time updates and more opportunities</p>
             <a
               href="https://t.me/your_channel"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-8 py-3 bg-[#0088cc] text-white font-bold rounded-full hover:bg-[#0077b5] transition-all"
+              className="btn-primary inline-flex items-center gap-3"
             >
-              Join Telegram Channel
+              Join Channel <ExternalLink className="w-4 h-4" />
             </a>
           </section>
         </div>
 
         <div className="lg:col-span-4">
-          <div className="sticky top-24 space-y-6">
+          <div className="sticky top-32 space-y-8">
             <a
               href={opportunity.applyLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 py-4 bg-black text-white font-black uppercase tracking-widest rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-black/10 active:scale-95"
+              className="w-full btn-primary flex items-center justify-center gap-3 !py-6 text-lg"
             >
-              Apply Now <ExternalLink className="w-4 h-4" />
+              Apply Now <ExternalLink className="w-5 h-5" />
             </a>
             
-            <button className="w-full flex items-center justify-center gap-2 py-4 bg-white border border-black/5 text-slate-900 font-bold rounded-2xl hover:bg-slate-50 transition-all">
-              <Share2 className="w-4 h-4" /> Share Opportunity
+            <button className="w-full btn-secondary flex items-center justify-center gap-3 !py-6 text-lg">
+              <Share2 className="w-5 h-5" /> Share
             </button>
 
-            <div className="p-6 bg-slate-50 rounded-2xl border border-black/5">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Tags</h4>
-              <div className="flex flex-wrap gap-2">
+            <div className="p-10 sloth-card">
+              <h4 className="text-[10px] font-display font-bold uppercase tracking-[0.3em] text-ink/30 mb-8">Tags</h4>
+              <div className="flex flex-wrap gap-3">
                 {opportunity.tags?.map(tag => (
-                  <span key={tag} className="px-3 py-1 bg-white border border-black/5 text-[10px] font-bold text-slate-600 rounded-full">
+                  <span key={tag} className="px-4 py-2 bg-ink/5 text-[10px] font-display font-bold text-ink/60 rounded-full uppercase tracking-widest hover:bg-ink hover:text-paper transition-all cursor-pointer">
                     #{tag}
                   </span>
                 ))}

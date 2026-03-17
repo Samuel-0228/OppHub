@@ -70,36 +70,51 @@ export const WeeklyDigest: React.FC<Props> = ({ user, onSelectOpportunity }) => 
     }
   };
 
-  if (loading) return <div className="max-w-7xl mx-auto p-12 animate-pulse">Loading Weekly Digest...</div>;
+  if (loading) return (
+    <div className="max-w-7xl mx-auto p-12">
+      <div className="h-8 w-64 bg-black/5 animate-pulse rounded mb-4" />
+      <div className="h-4 w-96 bg-black/5 animate-pulse rounded" />
+    </div>
+  );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
+    <div className="max-w-7xl mx-auto px-4 py-16">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">
         <div>
-          <h1 className="text-4xl font-black italic uppercase tracking-tight mb-2 flex items-center gap-3">
-            <Sparkles className="w-8 h-8 text-amber-500" /> Top Opportunities This Week
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent px-2 py-1 bg-accent/10 rounded">Weekly Selection</span>
+            <div className="h-[1px] w-12 bg-accent/30" />
+          </div>
+          <h1 className="text-6xl md:text-7xl font-serif font-light leading-tight tracking-tight text-ink mb-4">
+            The Weekly <span className="italic">Digest</span>
           </h1>
-          <p className="text-slate-500">Hand-picked best opportunities from the last 7 days.</p>
+          <p className="text-ink/60 font-sans max-w-xl text-lg">
+            A curated selection of the most impactful opportunities from the last seven days, hand-picked for the community.
+          </p>
         </div>
         
         {user?.role === 'admin' && (
           <button
             onClick={handleShareToTelegram}
-            className="flex items-center gap-2 px-6 py-3 bg-[#0088cc] text-white font-bold rounded-full hover:bg-[#0077b5] transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+            className="group flex items-center gap-3 px-8 py-4 bg-ink text-paper font-sans font-bold rounded-full hover:bg-accent hover:text-ink transition-all duration-300 shadow-xl shadow-ink/10 active:scale-95"
           >
-            <Send className="w-4 h-4" /> Share to Telegram
+            <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+            <span>Share to Telegram</span>
           </button>
         )}
       </div>
 
-      <div className="space-y-16">
+      <div className="space-y-24">
         {/* Internships */}
         {topInternships.length > 0 && (
           <section>
-            <h2 className="text-2xl font-black uppercase tracking-tight mb-8 flex items-center gap-3 border-b border-black/5 pb-4">
-              <Briefcase className="w-6 h-6" /> Top Internships
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex items-center justify-between mb-10 border-b border-ink/10 pb-6">
+              <h2 className="text-3xl font-serif italic text-ink flex items-center gap-4">
+                <Briefcase className="w-6 h-6 text-accent" /> Top Internships
+              </h2>
+              <span className="text-xs font-mono text-ink/40 uppercase tracking-widest">{topInternships.length} Picks</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {topInternships.map(o => (
                 <OpportunityCard key={o.id} opportunity={o} onClick={onSelectOpportunity} />
               ))}
@@ -110,10 +125,13 @@ export const WeeklyDigest: React.FC<Props> = ({ user, onSelectOpportunity }) => 
         {/* Scholarships */}
         {topScholarships.length > 0 && (
           <section>
-            <h2 className="text-2xl font-black uppercase tracking-tight mb-8 flex items-center gap-3 border-b border-black/5 pb-4">
-              <GraduationCap className="w-6 h-6" /> Top Scholarships
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex items-center justify-between mb-10 border-b border-ink/10 pb-6">
+              <h2 className="text-3xl font-serif italic text-ink flex items-center gap-4">
+                <GraduationCap className="w-6 h-6 text-accent" /> Top Scholarships
+              </h2>
+              <span className="text-xs font-mono text-ink/40 uppercase tracking-widest">{topScholarships.length} Picks</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {topScholarships.map(o => (
                 <OpportunityCard key={o.id} opportunity={o} onClick={onSelectOpportunity} />
               ))}
@@ -124,10 +142,13 @@ export const WeeklyDigest: React.FC<Props> = ({ user, onSelectOpportunity }) => 
         {/* Events */}
         {topEvents.length > 0 && (
           <section>
-            <h2 className="text-2xl font-black uppercase tracking-tight mb-8 flex items-center gap-3 border-b border-black/5 pb-4">
-              <Calendar className="w-6 h-6" /> Top Events
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex items-center justify-between mb-10 border-b border-ink/10 pb-6">
+              <h2 className="text-3xl font-serif italic text-ink flex items-center gap-4">
+                <Calendar className="w-6 h-6 text-accent" /> Top Events
+              </h2>
+              <span className="text-xs font-mono text-ink/40 uppercase tracking-widest">{topEvents.length} Picks</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {topEvents.map(o => (
                 <OpportunityCard key={o.id} opportunity={o} onClick={onSelectOpportunity} />
               ))}
@@ -138,10 +159,13 @@ export const WeeklyDigest: React.FC<Props> = ({ user, onSelectOpportunity }) => 
         {/* Competitions */}
         {topCompetitions.length > 0 && (
           <section>
-            <h2 className="text-2xl font-black uppercase tracking-tight mb-8 flex items-center gap-3 border-b border-black/5 pb-4">
-              <Trophy className="w-6 h-6" /> Top Competitions
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex items-center justify-between mb-10 border-b border-ink/10 pb-6">
+              <h2 className="text-3xl font-serif italic text-ink flex items-center gap-4">
+                <Trophy className="w-6 h-6 text-accent" /> Top Competitions
+              </h2>
+              <span className="text-xs font-mono text-ink/40 uppercase tracking-widest">{topCompetitions.length} Picks</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {topCompetitions.map(o => (
                 <OpportunityCard key={o.id} opportunity={o} onClick={onSelectOpportunity} />
               ))}
@@ -150,9 +174,9 @@ export const WeeklyDigest: React.FC<Props> = ({ user, onSelectOpportunity }) => 
         )}
 
         {topInternships.length === 0 && topScholarships.length === 0 && topEvents.length === 0 && topCompetitions.length === 0 && (
-          <div className="text-center py-24 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-            <h3 className="text-lg font-bold text-slate-900">No top picks this week yet</h3>
-            <p className="text-slate-500">Check back later for the weekly digest.</p>
+          <div className="text-center py-32 bg-ink/5 rounded-[2rem] border border-dashed border-ink/20">
+            <h3 className="text-2xl font-serif italic text-ink mb-2">Quiet on the horizon</h3>
+            <p className="text-ink/60 font-sans">Check back later for this week's top picks.</p>
           </div>
         )}
       </div>
