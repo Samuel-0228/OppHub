@@ -74,29 +74,36 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 bg-black rounded-xl animate-bounce flex items-center justify-center">
-            <div className="w-6 h-6 bg-white rounded-sm rotate-45" />
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 bg-accent/20 rounded-full animate-ping" />
+            <div className="relative w-16 h-16 bg-ink rounded-2xl flex items-center justify-center rotate-45">
+              <div className="w-6 h-6 bg-paper rounded-sm -rotate-45" />
+            </div>
           </div>
-          <span className="text-xs font-black uppercase tracking-widest animate-pulse">Loading OppHub...</span>
+          <div className="flex flex-col items-center">
+            <span className="text-xs font-mono text-ink/40 uppercase tracking-[0.3em] animate-pulse">Initializing</span>
+            <span className="text-2xl font-serif italic text-ink mt-2">OppHub</span>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-black selection:text-white">
+    <div className="min-h-screen bg-paper text-ink font-sans selection:bg-accent selection:text-ink">
       <Navbar user={user} onSearch={setSearchQuery} />
       
-      <main>
+      <main className="pt-24">
         <AnimatePresence mode="wait">
           {currentPage === 'home' && (
             <motion.div
               key="home"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
             >
               <Home 
                 user={user} 
@@ -112,6 +119,7 @@ export default function App() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
             >
               <OpportunityDetail 
                 id={selectedOpportunityId} 
@@ -123,9 +131,10 @@ export default function App() {
           {currentPage === 'admin' && (
             <motion.div
               key="admin"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.4 }}
             >
               <Admin user={user} />
             </motion.div>
@@ -134,9 +143,10 @@ export default function App() {
           {currentPage === 'bookmarks' && (
             <motion.div
               key="bookmarks"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
             >
               <Bookmarks 
                 user={user} 
@@ -148,9 +158,10 @@ export default function App() {
           {currentPage === 'weekly-digest' && (
             <motion.div
               key="weekly-digest"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
             >
               <WeeklyDigest 
                 user={user} 
@@ -161,25 +172,42 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      <footer className="bg-slate-50 border-t border-black/5 py-12 mt-24">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <div className="flex justify-center items-center gap-2 mb-6">
-            <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
-              <div className="w-3 h-3 bg-white rounded-sm rotate-45" />
+      <footer className="bg-ink text-paper py-24 mt-32 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-accent/30" />
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-16">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center rotate-12">
+                  <div className="w-4 h-4 bg-ink rounded-sm -rotate-12" />
+                </div>
+                <span className="text-3xl font-serif italic tracking-tight">OppHub</span>
+              </div>
+              <p className="text-paper/60 font-sans max-w-md text-lg leading-relaxed">
+                Empowering the next generation of Ethiopian talent through automated opportunity discovery and community-driven insights.
+              </p>
             </div>
-            <span className="text-lg font-black tracking-tighter uppercase italic">OppHub</span>
+            <div className="flex flex-col md:items-end gap-8">
+              <div className="flex gap-12 text-sm font-mono uppercase tracking-widest">
+                <a href="#" className="hover:text-accent transition-colors">Privacy</a>
+                <a href="#" className="hover:text-accent transition-colors">Terms</a>
+                <a href="#" className="hover:text-accent transition-colors">Contact</a>
+              </div>
+              <div className="h-[1px] w-full md:w-64 bg-paper/10" />
+              <p className="text-paper/40 font-mono text-xs uppercase tracking-[0.2em]">
+                © 2026 OppHub. Crafted with Habesha Elegance.
+              </p>
+            </div>
           </div>
-          <p className="text-sm text-slate-400 max-w-md mx-auto mb-8">
-            The automated platform for finding your next big opportunity. 
-            Join our Telegram for real-time alerts.
-          </p>
-          <div className="flex justify-center gap-8 text-[10px] font-black uppercase tracking-widest text-slate-400">
-            <a href="#" className="hover:text-black">Privacy Policy</a>
-            <a href="#" className="hover:text-black">Terms of Service</a>
-            <a href="#" className="hover:text-black">Contact Us</a>
-          </div>
-          <div className="mt-12 text-[10px] text-slate-300">
-            © 2026 OppHub. All rights reserved.
+          
+          <div className="pt-16 border-t border-paper/5 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="flex items-center gap-4">
+              <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+              <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-paper/40">System Status: Operational</span>
+            </div>
+            <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-paper/20">
+              v2.4.0-habesha-refined
+            </div>
           </div>
         </div>
       </footer>

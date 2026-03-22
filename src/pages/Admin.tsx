@@ -44,108 +44,124 @@ export const Admin: React.FC<Props> = ({ user }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="flex items-center justify-between mb-12">
+    <div className="max-w-7xl mx-auto px-4 py-24">
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-16 gap-8">
         <div>
-          <h1 className="text-3xl font-black italic uppercase tracking-tight">Admin Dashboard</h1>
-          <p className="text-slate-500">Manage imported opportunities from Telegram.</p>
-        </div>
-        <div className="flex gap-4">
-          <div className="px-6 py-3 bg-slate-100 rounded-2xl">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Pending</span>
-            <span className="text-xl font-bold">{opportunities.filter(o => !o.isApproved).length}</span>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent px-2 py-1 bg-accent/10 rounded">Control Center</span>
+            <div className="h-[1px] w-12 bg-accent/30" />
           </div>
-          <div className="px-6 py-3 bg-slate-100 rounded-2xl">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Total</span>
-            <span className="text-xl font-bold">{opportunities.length}</span>
+          <h1 className="text-6xl font-serif font-light tracking-tight text-ink mb-4">
+            Admin <span className="italic">Dashboard</span>
+          </h1>
+          <p className="text-ink/60 font-sans max-w-md">
+            Review, approve, and curate the best opportunities for the community.
+          </p>
+        </div>
+        <div className="flex gap-6">
+          <div className="px-8 py-6 bg-white border border-ink/5 rounded-[2rem] shadow-sm">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/30 block mb-1">Pending</span>
+            <span className="text-3xl font-serif italic text-amber-600">{opportunities.filter(o => !o.isApproved).length}</span>
+          </div>
+          <div className="px-8 py-6 bg-white border border-ink/5 rounded-[2rem] shadow-sm">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/30 block mb-1">Total</span>
+            <span className="text-3xl font-serif italic text-ink">{opportunities.length}</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-white border border-black/5 rounded-3xl overflow-hidden shadow-sm">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50 border-b border-black/5">
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Opportunity</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Category</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-black/5">
-            <AnimatePresence>
-              {opportunities.map((o) => (
-                <motion.tr
-                  key={o.id}
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="hover:bg-slate-50/50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-slate-900 mb-1">{o.title}</div>
-                    <div className="text-xs text-slate-400">{o.organization || 'No Organization'}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="px-3 py-1 bg-slate-100 text-[10px] font-bold uppercase tracking-wider rounded-full">
-                      {o.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {o.isApproved ? (
-                      <span className="flex items-center gap-1 text-emerald-500 text-xs font-bold">
-                        <Check className="w-3 h-3" /> Approved
+      <div className="bg-white border border-ink/10 rounded-[2.5rem] overflow-hidden shadow-xl shadow-ink/5">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-ink/5 border-b border-ink/10">
+                <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">Opportunity</th>
+                <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">Category</th>
+                <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">Status</th>
+                <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink/5">
+              <AnimatePresence mode="popLayout">
+                {opportunities.map((o) => (
+                  <motion.tr
+                    key={o.id}
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="hover:bg-ink/[0.02] transition-colors group"
+                  >
+                    <td className="px-8 py-6">
+                      <div className="font-serif text-xl text-ink mb-1 group-hover:text-accent transition-colors">{o.title}</div>
+                      <div className="text-xs font-sans text-ink/40 uppercase tracking-widest">{o.organization || 'Independent'}</div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <span className="px-3 py-1 bg-ink/5 text-[10px] font-bold uppercase tracking-widest rounded-full text-ink/60">
+                        {o.category}
                       </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-amber-500 text-xs font-bold">
-                        <Clock className="w-3 h-3" /> Pending
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleApprove(o.id, !o.isApproved)}
-                        className={`p-2 rounded-xl transition-all ${
-                          o.isApproved ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                        }`}
-                        title={o.isApproved ? "Unapprove" : "Approve"}
-                      >
-                        {o.isApproved ? <X className="w-4 h-4" /> : <Check className="w-4 h-4" />}
-                      </button>
-                      <button
-                        onClick={() => handleFeature(o.id, !o.isFeatured)}
-                        className={`p-2 rounded-xl transition-all ${
-                          o.isFeatured ? 'bg-amber-400 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                        }`}
-                        title={o.isFeatured ? "Unfeature" : "Feature"}
-                      >
-                        {o.isFeatured ? <Star className="w-4 h-4 fill-white" /> : <Star className="w-4 h-4" />}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(o.id)}
-                        className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-all"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                      <a
-                        href={o.applyLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl transition-all"
-                        title="View Link"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </AnimatePresence>
-          </tbody>
-        </table>
+                    </td>
+                    <td className="px-8 py-6">
+                      {o.isApproved ? (
+                        <div className="flex items-center gap-2 text-emerald-600">
+                          <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
+                          <span className="text-xs font-bold uppercase tracking-widest">Approved</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-amber-600">
+                          <div className="w-1.5 h-1.5 bg-amber-600 rounded-full" />
+                          <span className="text-xs font-bold uppercase tracking-widest">Pending</span>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => handleApprove(o.id, !o.isApproved)}
+                          className={`p-3 rounded-2xl transition-all duration-300 ${
+                            o.isApproved 
+                              ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' 
+                              : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                          }`}
+                          title={o.isApproved ? "Unapprove" : "Approve"}
+                        >
+                          {o.isApproved ? <X className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+                        </button>
+                        <button
+                          onClick={() => handleFeature(o.id, !o.isFeatured)}
+                          className={`p-3 rounded-2xl transition-all duration-300 ${
+                            o.isFeatured 
+                              ? 'bg-accent text-ink shadow-lg shadow-accent/20' 
+                              : 'bg-ink/5 text-ink/30 hover:bg-ink/10'
+                          }`}
+                          title={o.isFeatured ? "Unfeature" : "Feature"}
+                        >
+                          {o.isFeatured ? <Star className="w-4 h-4 fill-current" /> : <Star className="w-4 h-4" />}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(o.id)}
+                          className="p-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-2xl transition-all duration-300"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <a
+                          href={o.applyLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-3 bg-ink/5 text-ink/60 hover:bg-ink/10 rounded-2xl transition-all duration-300"
+                          title="View Source"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

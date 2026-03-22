@@ -42,22 +42,37 @@ export const Bookmarks: React.FC<Props> = ({ user, onSelectOpportunity }) => {
     await deleteDoc(doc(db, `users/${user.uid}/bookmarks`, bookmarkId));
   };
 
-  if (!user) return <div className="text-center py-24">Please sign in to view your bookmarks.</div>;
+  if (!user) return (
+    <div className="max-w-7xl mx-auto px-4 py-32 text-center">
+      <h2 className="text-4xl font-serif italic text-ink mb-4">A private collection</h2>
+      <p className="text-ink/60 mb-8">Please sign in to view your saved opportunities.</p>
+    </div>
+  );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="mb-12">
-        <h1 className="text-3xl font-black italic uppercase tracking-tight mb-2">My Bookmarks</h1>
-        <p className="text-slate-500">Opportunities you've saved for later.</p>
+    <div className="max-w-7xl mx-auto px-4 py-24">
+      <div className="mb-16">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent px-2 py-1 bg-accent/10 rounded">Saved</span>
+          <div className="h-[1px] w-12 bg-accent/30" />
+        </div>
+        <h1 className="text-6xl font-serif font-light tracking-tight text-ink mb-4">
+          My <span className="italic">Bookmarks</span>
+        </h1>
+        <p className="text-ink/60 font-sans max-w-md">
+          A personal archive of opportunities you've curated for your future.
+        </p>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => <div key={i} className="h-64 bg-slate-100 rounded-2xl animate-pulse" />)}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-96 bg-ink/5 rounded-[2rem] animate-pulse border border-ink/10" />
+          ))}
         </div>
       ) : opportunities.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <AnimatePresence>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          <AnimatePresence mode="popLayout">
             {opportunities.map(o => (
               <OpportunityCard
                 key={o.id}
@@ -70,15 +85,20 @@ export const Bookmarks: React.FC<Props> = ({ user, onSelectOpportunity }) => {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="text-center py-24 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <BookmarkIcon className="w-8 h-8 text-slate-300" />
+        <div className="text-center py-32 bg-white border border-dashed border-ink/10 rounded-[3rem] shadow-sm">
+          <div className="w-24 h-24 bg-ink/5 rounded-full flex items-center justify-center mx-auto mb-8">
+            <BookmarkIcon className="w-10 h-10 text-ink/20" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900">No bookmarks yet</h3>
-          <p className="text-slate-500">Start saving opportunities to see them here.</p>
-          <a href="/" className="inline-block mt-6 px-8 py-3 bg-black text-white font-bold rounded-full">
+          <h3 className="text-3xl font-serif italic text-ink mb-4">Your archive is empty</h3>
+          <p className="text-ink/60 font-sans max-w-xs mx-auto mb-10">
+            Explore the platform and save opportunities that resonate with your goals.
+          </p>
+          <button 
+            onClick={() => window.location.href = '/'}
+            className="px-10 py-4 bg-ink text-paper rounded-full font-sans font-bold hover:bg-accent hover:text-ink transition-all duration-300 shadow-xl shadow-ink/10 active:scale-95"
+          >
             Explore Opportunities
-          </a>
+          </button>
         </div>
       )}
     </div>
