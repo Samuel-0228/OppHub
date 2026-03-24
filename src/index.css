@@ -6,17 +6,17 @@
   --font-serif: "Cormorant Garamond", serif;
   --font-display: "Space Grotesk", sans-serif;
   
-  --color-background: #F8FAFC;
-  --color-foreground: #0F172A;
-  --color-primary: #10B981; /* Vibrant Green */
+  --color-background: #FFFFFF;
+  --color-foreground: #000000;
+  --color-primary: #451A03; /* Sophisticated Deep Brown */
   --color-primary-foreground: #FFFFFF;
-  --color-secondary: #F1F5F9;
-  --color-secondary-foreground: #475569;
-  --color-accent: #3B82F6; /* Blue for secondary accents */
-  --color-muted: #94A3B8;
-  --color-muted-foreground: #64748B;
+  --color-secondary: #FDF8F6; /* Very light warm brown/off-white */
+  --color-secondary-foreground: #1C1917;
+  --color-accent: #000000; /* Black for secondary accents */
+  --color-muted: #78716C;
+  --color-muted-foreground: #57534E;
   --color-card: #FFFFFF;
-  --color-border: #E2E8F0;
+  --color-border: #E7E5E4;
 }
 
 @layer base {
