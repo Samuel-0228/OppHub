@@ -1,79 +1,76 @@
 import React from 'react';
-import { Category } from '../types';
-import { Filter, X, Check, Globe, MapPin, Clock, Zap } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Filter, Check, Globe, Clock, Zap } from 'lucide-react';
 
 interface Props {
-  selectedCategory: Category | 'All';
-  setSelectedCategory: (cat: Category | 'All') => void;
   isRemoteOnly: boolean;
   setIsRemoteOnly: (val: boolean) => void;
   sortBy: 'newest' | 'deadline' | 'views';
   setSortBy: (val: 'newest' | 'deadline' | 'views') => void;
 }
 
-const CATEGORIES: (Category | 'All')[] = [
-  'All', 'Internships', 'Events', 'Competitions', 'Scholarships', 'Jobs', 'Fellowships', 'Conferences', 'Grants', 'General'
-];
+const pillInactive =
+  'bg-[var(--oh-surface)] border-[var(--oh-border)] text-[var(--oh-text-muted)] hover:border-[rgba(56,189,248,0.25)]';
+const pillActive =
+  'bg-[var(--oh-accent-dim)] border-[var(--oh-border-strong)] text-[var(--oh-accent-bright)]';
 
 export const Filters: React.FC<Props> = ({
-  selectedCategory,
-  setSelectedCategory,
   isRemoteOnly,
   setIsRemoteOnly,
   sortBy,
-  setSortBy
+  setSortBy,
 }) => {
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <div>
-        <h4 className="text-xs font-bold uppercase tracking-widest text-muted mb-4">
+        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--oh-text-subtle)] mb-3">
           Location
         </h4>
         <button
+          type="button"
           onClick={() => setIsRemoteOnly(!isRemoteOnly)}
-          className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all border ${
-            isRemoteOnly 
-              ? 'bg-primary/5 border-primary text-primary' 
-              : 'bg-white border-border text-muted hover:border-primary/30'
+          className={`w-full flex items-center justify-between px-4 py-3.5 rounded-[var(--oh-radius)] transition-all duration-[var(--oh-transition)] border ${
+            isRemoteOnly ? pillActive : pillInactive
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
-              isRemoteOnly ? 'bg-primary border-primary' : 'bg-white border-border'
-            }`}>
-              {isRemoteOnly && <Check className="w-3.5 h-3.5 text-white" />}
+            <div
+              className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
+                isRemoteOnly ? 'bg-[var(--oh-accent)] border-[var(--oh-accent)]' : 'bg-[var(--oh-elevated)] border-[var(--oh-border)]'
+              }`}
+            >
+              {isRemoteOnly && <Check className="w-3.5 h-3.5 text-[var(--oh-primary-foreground,#041018)]" strokeWidth={3} />}
             </div>
-            <span className="text-sm font-semibold">Remote Only</span>
+            <span className="text-sm font-semibold text-[var(--oh-text)]">Remote only</span>
           </div>
-          <Globe className={`w-4 h-4 ${isRemoteOnly ? 'text-primary' : 'text-muted/40'}`} />
+          <Globe className={`w-4 h-4 ${isRemoteOnly ? 'text-[var(--oh-accent)]' : 'text-[var(--oh-text-subtle)]'}`} />
         </button>
       </div>
 
       <div>
-        <h4 className="text-xs font-bold uppercase tracking-widest text-muted mb-4">
-          Sort By
+        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--oh-text-subtle)] mb-3">
+          Sort by
         </h4>
         <div className="space-y-2">
           {[
-            { id: 'newest', label: 'Newest First', icon: Clock },
-            { id: 'deadline', label: 'Deadline Soon', icon: Zap },
-            { id: 'views', label: 'Most Viewed', icon: Filter }
+            { id: 'newest' as const, label: 'Newest first', icon: Clock },
+            { id: 'deadline' as const, label: 'Deadline soon', icon: Zap },
+            { id: 'views' as const, label: 'Most viewed', icon: Filter },
           ].map((option) => (
             <button
               key={option.id}
-              onClick={() => setSortBy(option.id as any)}
-              className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all border ${
-                sortBy === option.id 
-                  ? 'bg-primary/5 border-primary text-primary' 
-                  : 'bg-white border-border text-muted hover:border-primary/30'
+              type="button"
+              onClick={() => setSortBy(option.id)}
+              className={`w-full flex items-center justify-between px-4 py-3.5 rounded-[var(--oh-radius)] transition-all duration-[var(--oh-transition)] border ${
+                sortBy === option.id ? pillActive : pillInactive
               }`}
             >
               <div className="flex items-center gap-3">
-                <option.icon className={`w-4 h-4 ${sortBy === option.id ? 'text-primary' : 'text-muted/40'}`} />
-                <span className="text-sm font-semibold">{option.label}</span>
+                <option.icon
+                  className={`w-4 h-4 ${sortBy === option.id ? 'text-[var(--oh-accent)]' : 'text-[var(--oh-text-subtle)]'}`}
+                />
+                <span className="text-sm font-semibold text-[var(--oh-text)]">{option.label}</span>
               </div>
-              {sortBy === option.id && <div className="w-1.5 h-1.5 bg-primary rounded-full" />}
+              {sortBy === option.id && <div className="w-2 h-2 rounded-full bg-[var(--oh-accent)] shadow-[0_0_10px_var(--oh-accent-glow)]" />}
             </button>
           ))}
         </div>

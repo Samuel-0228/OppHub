@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
-import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
-import { Opportunity, Category, UserProfile } from '../types';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { Opportunity, UserProfile } from '../types';
 import { OpportunityCard } from '../components/OpportunityCard';
-import { Sparkles, Send, Calendar, Trophy, Briefcase, GraduationCap } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Send, Calendar, Trophy, Briefcase, GraduationCap } from 'lucide-react';
 import { subDays } from 'date-fns';
 
 interface Props {
@@ -29,16 +28,15 @@ export const WeeklyDigest: React.FC<Props> = ({ user, onSelectOpportunity }) => 
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const all = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Opportunity));
-      
-      // Sort by viewCount for "Top" picks
+      const all = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Opportunity));
+
       const sorted = [...all].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
 
-      setTopInternships(sorted.filter(o => o.category === 'Internships').slice(0, 3));
-      setTopScholarships(sorted.filter(o => o.category === 'Scholarships').slice(0, 3));
-      setTopEvents(sorted.filter(o => o.category === 'Events').slice(0, 3));
-      setTopCompetitions(sorted.filter(o => o.category === 'Competitions').slice(0, 3));
-      
+      setTopInternships(sorted.filter((o) => o.category === 'Internships').slice(0, 3));
+      setTopScholarships(sorted.filter((o) => o.category === 'Scholarships').slice(0, 3));
+      setTopEvents(sorted.filter((o) => o.category === 'Events').slice(0, 3));
+      setTopCompetitions(sorted.filter((o) => o.category === 'Competitions').slice(0, 3));
+
       setLoading(false);
     });
 
@@ -47,19 +45,19 @@ export const WeeklyDigest: React.FC<Props> = ({ user, onSelectOpportunity }) => 
 
   const handleShareToTelegram = async () => {
     if (!user || user.role !== 'admin') return;
-    
+
     try {
       const response = await fetch('/api/share-digest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          internships: topInternships.map(o => o.title),
-          scholarships: topScholarships.map(o => o.title),
-          events: topEvents.map(o => o.title),
-          competitions: topCompetitions.map(o => o.title)
-        })
+          internships: topInternships.map((o) => o.title),
+          scholarships: topScholarships.map((o) => o.title),
+          events: topEvents.map((o) => o.title),
+          competitions: topCompetitions.map((o) => o.title),
+        }),
       });
-      
+
       if (response.ok) {
         alert('Digest shared to Telegram channel!');
       } else {
@@ -70,112 +68,116 @@ export const WeeklyDigest: React.FC<Props> = ({ user, onSelectOpportunity }) => 
     }
   };
 
-  if (loading) return (
-    <div className="max-w-7xl mx-auto px-6 py-24">
-      <div className="h-8 w-64 bg-muted/10 animate-pulse rounded-lg mb-4" />
-      <div className="h-4 w-96 bg-muted/10 animate-pulse rounded-lg" />
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="oh-page-fade max-w-7xl mx-auto px-5 py-24">
+        <div className="h-9 w-56 bg-[var(--oh-surface)] rounded-lg mb-4 animate-pulse border border-[var(--oh-border)]" />
+        <div className="h-4 w-80 max-w-full bg-[var(--oh-surface)] rounded-lg animate-pulse border border-[var(--oh-border)]" />
+      </div>
+    );
+  }
+
+  const sectionHeader = (icon: React.ElementType, title: string, count: number) => {
+    const Icon = icon;
+    return (
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-8 pb-6 border-b border-[var(--oh-border)]">
+        <h2
+          className="text-xl md:text-2xl font-bold text-[var(--oh-text)] flex items-center gap-3"
+          style={{ fontFamily: 'var(--oh-font-display)' }}
+        >
+          <Icon className="w-7 h-7 text-[var(--oh-accent)] shrink-0" />
+          {title}
+        </h2>
+        <span className="text-[10px] font-bold text-[var(--oh-text-subtle)] uppercase tracking-[0.2em]">{count} picks</span>
+      </div>
+    );
+  };
+
+  const hasAny =
+    topInternships.length > 0 ||
+    topScholarships.length > 0 ||
+    topEvents.length > 0 ||
+    topCompetitions.length > 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">
+    <div className="oh-page-fade max-w-7xl mx-auto px-5 lg:px-8 py-12 md:py-16">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16 md:mb-20">
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-primary px-3 py-1 bg-primary/10 rounded-full">Weekly Selection</span>
-          </div>
-          <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground mb-4 tracking-tight">
-            The Weekly Digest
+          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-[var(--oh-accent-bright)] mb-3">Last 7 days</p>
+          <h1
+            className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-[var(--oh-text)] mb-4 tracking-tight"
+            style={{ fontFamily: 'var(--oh-font-display)' }}
+          >
+            Weekly digest
           </h1>
-          <p className="text-muted max-w-xl text-lg">
-            A curated selection of the most impactful opportunities from the last seven days, hand-picked for the community.
+          <p className="text-[var(--oh-text-muted)] max-w-2xl text-lg leading-relaxed">
+            High-signal opportunities ranked by engagement — the same pipeline that powers the public feed, distilled for scanning.
           </p>
         </div>
-        
+
         {user?.role === 'admin' && (
           <button
+            type="button"
             onClick={handleShareToTelegram}
-            className="group flex items-center gap-3 px-8 py-4 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95"
+            className="group inline-flex items-center justify-center gap-2 btn-primary px-7 py-3.5 text-sm w-full sm:w-auto"
           >
-            <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-            <span>Share to Telegram</span>
+            <Send className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            Share to Telegram
           </button>
         )}
       </div>
 
-      <div className="space-y-24">
-        {/* Internships */}
+      <div className="space-y-20 md:space-y-24">
         {topInternships.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-8 border-b border-border pb-6">
-              <h2 className="text-2xl font-serif font-bold text-foreground flex items-center gap-4">
-                <Briefcase className="w-6 h-6 text-primary" /> Top Internships
-              </h2>
-              <span className="text-[10px] font-bold text-muted uppercase tracking-widest">{topInternships.length} Picks</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {topInternships.map(o => (
+            {sectionHeader(Briefcase, 'Top internships', topInternships.length)}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {topInternships.map((o) => (
                 <OpportunityCard key={o.id} opportunity={o} onClick={onSelectOpportunity} />
               ))}
             </div>
           </section>
         )}
 
-        {/* Scholarships */}
         {topScholarships.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-8 border-b border-border pb-6">
-              <h2 className="text-2xl font-serif font-bold text-foreground flex items-center gap-4">
-                <GraduationCap className="w-6 h-6 text-primary" /> Top Scholarships
-              </h2>
-              <span className="text-[10px] font-bold text-muted uppercase tracking-widest">{topScholarships.length} Picks</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {topScholarships.map(o => (
+            {sectionHeader(GraduationCap, 'Top scholarships', topScholarships.length)}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {topScholarships.map((o) => (
                 <OpportunityCard key={o.id} opportunity={o} onClick={onSelectOpportunity} />
               ))}
             </div>
           </section>
         )}
 
-        {/* Events */}
         {topEvents.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-8 border-b border-border pb-6">
-              <h2 className="text-2xl font-serif font-bold text-foreground flex items-center gap-4">
-                <Calendar className="w-6 h-6 text-primary" /> Top Events
-              </h2>
-              <span className="text-[10px] font-bold text-muted uppercase tracking-widest">{topEvents.length} Picks</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {topEvents.map(o => (
+            {sectionHeader(Calendar, 'Top events', topEvents.length)}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {topEvents.map((o) => (
                 <OpportunityCard key={o.id} opportunity={o} onClick={onSelectOpportunity} />
               ))}
             </div>
           </section>
         )}
 
-        {/* Competitions */}
         {topCompetitions.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-8 border-b border-border pb-6">
-              <h2 className="text-2xl font-serif font-bold text-foreground flex items-center gap-4">
-                <Trophy className="w-6 h-6 text-primary" /> Top Competitions
-              </h2>
-              <span className="text-[10px] font-bold text-muted uppercase tracking-widest">{topCompetitions.length} Picks</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {topCompetitions.map(o => (
+            {sectionHeader(Trophy, 'Top competitions', topCompetitions.length)}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {topCompetitions.map((o) => (
                 <OpportunityCard key={o.id} opportunity={o} onClick={onSelectOpportunity} />
               ))}
             </div>
           </section>
         )}
 
-        {topInternships.length === 0 && topScholarships.length === 0 && topEvents.length === 0 && topCompetitions.length === 0 && (
-          <div className="text-center py-32 bg-muted/5 rounded-[2.5rem] border border-dashed border-border">
-            <h3 className="text-2xl font-serif font-bold text-foreground mb-2">Quiet on the horizon</h3>
-            <p className="text-muted">Check back later for this week's top picks.</p>
+        {!hasAny && (
+          <div className="text-center py-24 md:py-32 rounded-[var(--oh-radius-xl)] border border-dashed border-[var(--oh-border)] bg-[var(--oh-surface)]/80">
+            <h3 className="text-xl font-bold text-[var(--oh-text)] mb-2" style={{ fontFamily: 'var(--oh-font-display)' }}>
+              Quiet week
+            </h3>
+            <p className="text-[var(--oh-text-muted)]">Check back after new posts land from Telegram.</p>
           </div>
         )}
       </div>

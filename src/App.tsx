@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { auth, db } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { UserProfile } from './types';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
@@ -10,13 +10,31 @@ import { Admin } from './pages/Admin';
 import { Bookmarks } from './pages/Bookmarks';
 import { WeeklyDigest } from './pages/WeeklyDigest';
 import { motion, AnimatePresence } from 'motion/react';
+import { Sparkles } from 'lucide-react';
+
+function syncPathToState(
+  setPage: React.Dispatch<React.SetStateAction<'home' | 'detail' | 'admin' | 'bookmarks' | 'weekly-digest'>>,
+  setId: React.Dispatch<React.SetStateAction<string | null>>
+) {
+  const path = window.location.pathname;
+  if (path === '/admin') setPage('admin');
+  else if (path === '/bookmarks') setPage('bookmarks');
+  else if (path === '/weekly-digest') setPage('weekly-digest');
+  else if (path.startsWith('/opportunity/')) {
+    const id = path.split('/')[2];
+    setId(id || null);
+    setPage('detail');
+  } else {
+    setPage('home');
+    setId(null);
+  }
+}
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState<'home' | 'detail' | 'admin' | 'bookmarks' | 'weekly-digest'>('home');
   const [selectedOpportunityId, setSelectedOpportunityId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -27,8 +45,7 @@ export default function App() {
         if (userSnap.exists()) {
           const userData = userSnap.data() as UserProfile;
           const isAdmin = firebaseUser.email === 'ytsamuael@gmail.com';
-          
-          // Ensure admin role is up to date for the designated email
+
           if (isAdmin && userData.role !== 'admin') {
             const updatedUser = { ...userData, role: 'admin' as const };
             await updateDoc(userRef, { role: 'admin' });
@@ -37,7 +54,6 @@ export default function App() {
             setUser(userData);
           }
         } else {
-          // Create new user profile
           const isAdmin = firebaseUser.email === 'ytsamuael@gmail.com';
           const newUser: UserProfile = {
             uid: firebaseUser.uid,
@@ -59,42 +75,37 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Handle URL changes for simple routing
   useEffect(() => {
-    const path = window.location.pathname;
-    if (path === '/admin') setCurrentPage('admin');
-    else if (path === '/bookmarks') setCurrentPage('bookmarks');
-    else if (path === '/weekly-digest') setCurrentPage('weekly-digest');
-    else if (path.startsWith('/opportunity/')) {
-      const id = path.split('/')[2];
-      setSelectedOpportunityId(id);
-      setCurrentPage('detail');
-    } else {
-      setCurrentPage('home');
-    }
+    syncPathToState(setCurrentPage, setSelectedOpportunityId);
+    const onPop = () => syncPathToState(setCurrentPage, setSelectedOpportunityId);
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   }, []);
 
-  const navigate = (page: 'home' | 'detail' | 'admin' | 'bookmarks' | 'weekly-digest', id?: string) => {
+  const navigate = useCallback((page: 'home' | 'detail' | 'admin' | 'bookmarks' | 'weekly-digest', id?: string) => {
     setCurrentPage(page);
     if (id) setSelectedOpportunityId(id);
-    
+    if (page === 'home') setSelectedOpportunityId(null);
+
     const url = page === 'home' ? '/' : page === 'detail' ? `/opportunity/${id}` : `/${page}`;
     window.history.pushState({}, '', url);
-  };
+  }, []);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--oh-canvas)] oh-grid-bg">
         <div className="flex flex-col items-center gap-8">
-          <div className="relative w-20 h-20">
-            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
-            <div className="relative w-20 h-20 bg-primary rounded-3xl flex items-center justify-center rotate-12 shadow-2xl shadow-primary/20">
-              <div className="w-8 h-8 bg-white rounded-lg -rotate-12" />
+          <div className="relative w-[5.5rem] h-[5.5rem]">
+            <div className="absolute inset-0 rounded-3xl bg-[var(--oh-accent-dim)] animate-ping opacity-40" />
+            <div className="relative w-[5.5rem] h-[5.5rem] rounded-3xl bg-gradient-to-br from-[var(--oh-accent)] to-sky-600 flex items-center justify-center shadow-[0_12px_48px_var(--oh-accent-glow)]">
+              <Sparkles className="w-9 h-9 text-[var(--oh-primary-foreground,#041018)]" strokeWidth={2.2} />
             </div>
           </div>
-          <div className="flex flex-col items-center">
-            <span className="text-[10px] font-bold text-muted uppercase tracking-[0.4em] animate-pulse">Initializing</span>
-            <span className="text-3xl font-serif font-bold text-foreground mt-3">OppHub</span>
+          <div className="flex flex-col items-center text-center">
+            <span className="text-[10px] font-bold text-[var(--oh-text-subtle)] uppercase tracking-[0.4em] animate-pulse">Loading</span>
+            <span className="text-3xl font-extrabold text-[var(--oh-text)] mt-4 tracking-tight" style={{ fontFamily: 'var(--oh-font-display)' }}>
+              OppHub
+            </span>
           </div>
         </div>
       </div>
@@ -102,38 +113,36 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary selection:text-white">
-      <Navbar user={user} onSearch={setSearchQuery} onNavigate={navigate} />
-      
-      <main className="pt-20">
+    <div className="min-h-screen bg-[var(--oh-canvas)] text-[var(--oh-text)] font-sans antialiased">
+      <Navbar user={user} onNavigate={navigate} currentPage={currentPage} />
+
+      <main>
         <AnimatePresence mode="wait">
           {currentPage === 'home' && (
             <motion.div
               key="home"
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.38, ease: [0.23, 1, 0.32, 1] }}
             >
-              <Home 
-                user={user} 
-                searchQuery={searchQuery} 
-                onSelectOpportunity={(id) => navigate('detail', id)} 
-              />
+              <Home user={user} onSelectOpportunity={(id) => navigate('detail', id)} />
             </motion.div>
           )}
 
           {currentPage === 'detail' && selectedOpportunityId && (
             <motion.div
               key="detail"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 18 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+              exit={{ opacity: 0, x: -18 }}
+              transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
             >
-              <OpportunityDetail 
-                id={selectedOpportunityId} 
-                onBack={() => navigate('home')} 
+              <OpportunityDetail
+                id={selectedOpportunityId}
+                onBack={() => navigate('home')}
+                onNavigateHome={() => navigate('home')}
+                onSelectRelated={(rid) => navigate('detail', rid)}
               />
             </motion.div>
           )}
@@ -141,10 +150,10 @@ export default function App() {
           {currentPage === 'admin' && (
             <motion.div
               key="admin"
-              initial={{ opacity: 0, scale: 0.98 }}
+              initial={{ opacity: 0, scale: 0.99 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.4 }}
+              exit={{ opacity: 0, scale: 0.99 }}
+              transition={{ duration: 0.35 }}
             >
               <Admin user={user} />
             </motion.div>
@@ -153,71 +162,67 @@ export default function App() {
           {currentPage === 'bookmarks' && (
             <motion.div
               key="bookmarks"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.38 }}
             >
-              <Bookmarks 
-                user={user} 
-                onSelectOpportunity={(id) => navigate('detail', id)} 
-              />
+              <Bookmarks user={user} onSelectOpportunity={(id) => navigate('detail', id)} />
             </motion.div>
           )}
 
           {currentPage === 'weekly-digest' && (
             <motion.div
               key="weekly-digest"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.38 }}
             >
-              <WeeklyDigest 
-                user={user} 
-                onSelectOpportunity={(id) => navigate('detail', id)} 
-              />
+              <WeeklyDigest user={user} onSelectOpportunity={(id) => navigate('detail', id)} />
             </motion.div>
           )}
         </AnimatePresence>
       </main>
 
-      <footer className="bg-foreground text-white py-24 mt-32 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-primary/30" />
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-16">
+      <footer className="relative mt-24 border-t border-[var(--oh-border)] bg-[var(--oh-surface)] overflow-hidden">
+        <div className="absolute inset-0 oh-hero-gradient opacity-50 pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-5 lg:px-8 py-16 md:py-20 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
             <div>
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center rotate-12 shadow-lg shadow-primary/20">
-                  <div className="w-5 h-5 bg-white rounded-lg -rotate-12" />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-11 h-11 rounded-[var(--oh-radius)] bg-gradient-to-br from-[var(--oh-accent)] to-sky-600 flex items-center justify-center shadow-[0_8px_28px_var(--oh-accent-glow)]">
+                  <Sparkles className="w-5 h-5 text-[var(--oh-primary-foreground,#041018)]" />
                 </div>
-                <span className="text-4xl font-serif font-bold tracking-tight">OppHub</span>
+                <span className="text-2xl font-extrabold tracking-tight text-[var(--oh-text)]" style={{ fontFamily: 'var(--oh-font-display)' }}>
+                  OppHub
+                </span>
               </div>
-              <p className="text-white/60 max-w-md text-lg leading-relaxed">
-                Empowering the next generation of Ethiopian talent through automated opportunity discovery and community-driven insights.
+              <p className="text-[var(--oh-text-muted)] max-w-md leading-relaxed">
+                Telegram-native opportunity intelligence — surfaced as a sharp editorial feed for builders, students, and early-career talent.
               </p>
             </div>
-            <div className="flex flex-col md:items-end gap-8">
-              <div className="flex gap-12 text-sm font-bold uppercase tracking-widest">
-                <a href="#" className="hover:text-primary transition-colors">Privacy</a>
-                <a href="#" className="hover:text-primary transition-colors">Terms</a>
-                <a href="#" className="hover:text-primary transition-colors">Contact</a>
+            <div className="flex flex-col md:items-end gap-6">
+              <div className="flex flex-wrap gap-x-10 gap-y-3 text-xs font-bold uppercase tracking-[0.2em] text-[var(--oh-text-muted)]">
+                <a href="#" className="hover:text-[var(--oh-accent-bright)] transition-colors">
+                  Privacy
+                </a>
+                <a href="#" className="hover:text-[var(--oh-accent-bright)] transition-colors">
+                  Terms
+                </a>
+                <a href="#" className="hover:text-[var(--oh-accent-bright)] transition-colors">
+                  Contact
+                </a>
               </div>
-              <div className="h-[1px] w-full md:w-64 bg-white/10" />
-              <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.3em]">
-                © 2026 OppHub. Crafted with Habesha Elegance.
-              </p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--oh-text-subtle)]">© 2026 OppHub</p>
             </div>
           </div>
-          
-          <div className="pt-16 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="flex items-center gap-4">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">System Status: Operational</span>
+          <div className="mt-14 pt-8 border-t border-[var(--oh-border)] flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--oh-text-subtle)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--oh-success)] shadow-[0_0_10px_var(--oh-success)]" />
+              Systems operational
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20">
-              v2.5.0-curvetree-inspired
-            </div>
+            <span className="text-[10px] text-[var(--oh-text-subtle)]">Design system: electric / Syne + DM Sans</span>
           </div>
         </div>
       </footer>

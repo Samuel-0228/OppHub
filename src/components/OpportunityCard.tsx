@@ -1,13 +1,19 @@
 import React from 'react';
 import { Opportunity } from '../types';
-import { Calendar, MapPin, Building2, ArrowRight, Bookmark, BookmarkCheck } from 'lucide-react';
-import { formatDistanceToNow, isAfter, subDays, isBefore, addDays } from 'date-fns';
+import { Calendar, Radio, ArrowRight, Bookmark, BookmarkCheck } from 'lucide-react';
+import { formatDistanceToNow, isAfter, subDays, isBefore, addDays, format } from 'date-fns';
 import { motion } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+function excerptFrom(text: string, max = 140) {
+  const t = text.replace(/\s+/g, ' ').trim();
+  if (t.length <= max) return t;
+  return t.slice(0, max).trim() + '…';
 }
 
 interface Props {
@@ -22,82 +28,100 @@ export const OpportunityCard: React.FC<Props> = ({ opportunity, isBookmarked, on
   const isExpired = deadlineDate && isBefore(deadlineDate, new Date());
   const isClosingSoon = deadlineDate && !isExpired && isBefore(deadlineDate, addDays(new Date(), 3));
   const isNew = isAfter(new Date(opportunity.createdAt), subDays(new Date(), 2));
+  const sourceLabel = opportunity.sourceChannel?.trim() || 'Telegram';
+  const published = format(new Date(opportunity.createdAt), 'MMM d, yyyy');
 
   return (
-    <motion.div
+    <motion.article
       layout
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group relative curvetree-card cursor-pointer flex flex-col h-full"
+      transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+      className="group relative oh-card cursor-pointer flex flex-col h-full overflow-hidden p-0"
       onClick={() => onClick?.(opportunity.id)}
     >
-      <div className="flex justify-between items-start mb-6">
-        <div className="w-14 h-14 bg-secondary rounded-2xl flex items-center justify-center border border-border group-hover:border-primary transition-colors">
-          <Building2 className="w-7 h-7 text-muted group-hover:text-primary transition-colors" />
-        </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onBookmark?.(opportunity.id);
-          }}
-          className="p-2.5 hover:bg-secondary rounded-xl transition-all active:scale-90"
-        >
-          {isBookmarked ? (
-            <BookmarkCheck className="w-5 h-5 text-primary fill-primary" />
-          ) : (
-            <Bookmark className="w-5 h-5 text-muted group-hover:text-primary transition-colors" />
-          )}
-        </button>
-      </div>
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-[var(--oh-transition)] pointer-events-none bg-gradient-to-br from-[var(--oh-accent-dim)] via-transparent to-transparent" />
 
-      <div className="flex-grow">
-        <div className="flex flex-wrap gap-2 mb-4">
-          <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded-lg">
-            {opportunity.category}
-          </span>
-          {isNew && (
-            <span className="px-3 py-1 bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-widest rounded-lg">
-              New
+      <div className="relative p-6 md:p-7 flex flex-col flex-1 gap-5">
+        <div className="flex justify-between items-start gap-3">
+          <div className="flex flex-wrap gap-2">
+            <span
+              className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md bg-[var(--oh-accent-dim)] text-[var(--oh-accent-bright)] border border-[var(--oh-border)]"
+            >
+              {opportunity.category}
             </span>
-          )}
-          {isClosingSoon && (
-            <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[10px] font-bold uppercase tracking-widest rounded-lg">
-              Closing Soon
+            {isNew && (
+              <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md bg-[var(--oh-success-dim)] text-[var(--oh-success)] border border-[var(--oh-border)]">
+                New
+              </span>
+            )}
+            {isClosingSoon && (
+              <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md bg-[var(--oh-warning-dim)] text-[var(--oh-warning)] border border-[var(--oh-border)]">
+                Closing Soon
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onBookmark?.(opportunity.id);
+            }}
+            className="shrink-0 p-2 rounded-[var(--oh-radius)] transition-all duration-[var(--oh-transition)] text-[var(--oh-text-muted)] hover:text-[var(--oh-accent-bright)] hover:bg-[var(--oh-accent-dim)] active:scale-95"
+            aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
+          >
+            {isBookmarked ? (
+              <BookmarkCheck className="w-5 h-5 text-[var(--oh-accent)] fill-[var(--oh-accent)]/25" />
+            ) : (
+              <Bookmark className="w-5 h-5" />
+            )}
+          </button>
+        </div>
+
+        <div className="space-y-3 flex-1 min-h-0">
+          <h3
+            className="text-xl md:text-[1.35rem] font-bold text-[var(--oh-text)] leading-snug line-clamp-2 group-hover:text-[var(--oh-accent-bright)] transition-colors duration-[var(--oh-transition)]"
+            style={{ fontFamily: 'var(--oh-font-display)' }}
+          >
+            {opportunity.title}
+          </h3>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-[var(--oh-text-muted)]">
+            <span className="inline-flex items-center gap-1.5">
+              <Radio className="w-3.5 h-3.5 text-[var(--oh-accent)] opacity-80" />
+              {sourceLabel}
             </span>
-          )}
+            <span className="inline-flex items-center gap-1.5 tabular-nums">
+              <Calendar className="w-3.5 h-3.5 opacity-70" />
+              {published}
+            </span>
+          </div>
+
+          <p className="text-sm leading-relaxed text-[var(--oh-text-muted)] line-clamp-3">
+            {excerptFrom(opportunity.description)}
+          </p>
         </div>
 
-        <h3 className="text-xl font-display font-bold text-foreground mb-3 line-clamp-2 leading-tight group-hover:text-primary transition-colors">
-          {opportunity.title}
-        </h3>
-
-        <div className="flex flex-wrap items-center gap-4 mb-6">
-          {opportunity.organization && (
-            <div className="flex items-center text-sm font-semibold text-muted">
-              <Building2 className="w-4 h-4 mr-1.5 opacity-50" />
-              {opportunity.organization}
-            </div>
-          )}
-          {opportunity.location && (
-            <div className="flex items-center text-sm font-semibold text-muted">
-              <MapPin className="w-4 h-4 mr-1.5 opacity-50" />
-              {opportunity.location}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between pt-6 border-t border-border mt-auto">
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold text-muted uppercase tracking-widest mb-1">Deadline</span>
-          <span className={cn("text-sm font-bold", isExpired ? "text-red-500" : "text-foreground")}>
-            {opportunity.deadline ? new Date(opportunity.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Open'}
+        <div className="relative flex items-center justify-between gap-4 pt-5 border-t border-[var(--oh-border)]">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--oh-text-subtle)] block mb-1">
+              Apply by
+            </span>
+            <span className={cn('text-sm font-semibold tabular-nums', isExpired ? 'text-[var(--oh-danger)]' : 'text-[var(--oh-text)]')}>
+              {opportunity.deadline
+                ? new Date(opportunity.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                : 'Open'}
+            </span>
+          </div>
+          <span
+            className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-wider bg-[var(--oh-surface-glow)] border border-[var(--oh-border)] text-[var(--oh-accent-bright)] transition-all duration-[var(--oh-transition)] group-hover:border-[var(--oh-border-strong)] group-hover:bg-[var(--oh-accent-dim)] group-hover:gap-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Read More
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </span>
         </div>
-        <button className="btn-primary !px-5 !py-2.5 text-xs">
-          Apply Now
-        </button>
       </div>
-    </motion.div>
+    </motion.article>
   );
 };

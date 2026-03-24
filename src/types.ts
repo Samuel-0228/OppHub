@@ -11,6 +11,8 @@ export interface Opportunity {
   applyLink?: string;
   tags?: string[];
   rawTelegramText?: string;
+  /** Display name of the Telegram channel when captured */
+  sourceChannel?: string;
   isApproved: boolean;
   isFeatured: boolean;
   viewCount: number;
