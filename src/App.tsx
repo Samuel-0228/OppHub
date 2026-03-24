@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { auth, db } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { UserProfile } from './types';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
@@ -25,7 +25,17 @@ export default function App() {
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
-          setUser(userSnap.data() as UserProfile);
+          const userData = userSnap.data() as UserProfile;
+          const isAdmin = firebaseUser.email === 'ytsamuael@gmail.com';
+          
+          // Ensure admin role is up to date for the designated email
+          if (isAdmin && userData.role !== 'admin') {
+            const updatedUser = { ...userData, role: 'admin' as const };
+            await updateDoc(userRef, { role: 'admin' });
+            setUser(updatedUser);
+          } else {
+            setUser(userData);
+          }
         } else {
           // Create new user profile
           const isAdmin = firebaseUser.email === 'ytsamuael@gmail.com';
@@ -74,17 +84,17 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-paper">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 bg-accent/20 rounded-full animate-ping" />
-            <div className="relative w-16 h-16 bg-ink rounded-2xl flex items-center justify-center rotate-45">
-              <div className="w-6 h-6 bg-paper rounded-sm -rotate-45" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-8">
+          <div className="relative w-20 h-20">
+            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+            <div className="relative w-20 h-20 bg-primary rounded-3xl flex items-center justify-center rotate-12 shadow-2xl shadow-primary/20">
+              <div className="w-8 h-8 bg-white rounded-lg -rotate-12" />
             </div>
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-xs font-mono text-ink/40 uppercase tracking-[0.3em] animate-pulse">Initializing</span>
-            <span className="text-2xl font-serif italic text-ink mt-2">OppHub</span>
+            <span className="text-[10px] font-bold text-muted uppercase tracking-[0.4em] animate-pulse">Initializing</span>
+            <span className="text-3xl font-serif font-bold text-foreground mt-3">OppHub</span>
           </div>
         </div>
       </div>
@@ -92,10 +102,10 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink font-sans selection:bg-accent selection:text-ink">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary selection:text-white">
       <Navbar user={user} onSearch={setSearchQuery} />
       
-      <main className="pt-24">
+      <main className="pt-20">
         <AnimatePresence mode="wait">
           {currentPage === 'home' && (
             <motion.div
@@ -172,41 +182,41 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      <footer className="bg-ink text-paper py-24 mt-32 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-accent/30" />
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
+      <footer className="bg-foreground text-white py-24 mt-32 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-primary/30" />
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-16">
             <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center rotate-12">
-                  <div className="w-4 h-4 bg-ink rounded-sm -rotate-12" />
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center rotate-12 shadow-lg shadow-primary/20">
+                  <div className="w-5 h-5 bg-white rounded-lg -rotate-12" />
                 </div>
-                <span className="text-3xl font-serif italic tracking-tight">OppHub</span>
+                <span className="text-4xl font-serif font-bold tracking-tight">OppHub</span>
               </div>
-              <p className="text-paper/60 font-sans max-w-md text-lg leading-relaxed">
+              <p className="text-white/60 max-w-md text-lg leading-relaxed">
                 Empowering the next generation of Ethiopian talent through automated opportunity discovery and community-driven insights.
               </p>
             </div>
             <div className="flex flex-col md:items-end gap-8">
-              <div className="flex gap-12 text-sm font-mono uppercase tracking-widest">
-                <a href="#" className="hover:text-accent transition-colors">Privacy</a>
-                <a href="#" className="hover:text-accent transition-colors">Terms</a>
-                <a href="#" className="hover:text-accent transition-colors">Contact</a>
+              <div className="flex gap-12 text-sm font-bold uppercase tracking-widest">
+                <a href="#" className="hover:text-primary transition-colors">Privacy</a>
+                <a href="#" className="hover:text-primary transition-colors">Terms</a>
+                <a href="#" className="hover:text-primary transition-colors">Contact</a>
               </div>
-              <div className="h-[1px] w-full md:w-64 bg-paper/10" />
-              <p className="text-paper/40 font-mono text-xs uppercase tracking-[0.2em]">
+              <div className="h-[1px] w-full md:w-64 bg-white/10" />
+              <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.3em]">
                 © 2026 OppHub. Crafted with Habesha Elegance.
               </p>
             </div>
           </div>
           
-          <div className="pt-16 border-t border-paper/5 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="pt-16 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex items-center gap-4">
-              <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-              <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-paper/40">System Status: Operational</span>
+              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">System Status: Operational</span>
             </div>
-            <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-paper/20">
-              v2.4.0-habesha-refined
+            <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20">
+              v2.5.0-curvetree-inspired
             </div>
           </div>
         </div>

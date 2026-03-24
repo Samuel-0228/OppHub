@@ -44,44 +44,43 @@ export const Admin: React.FC<Props> = ({ user }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-24">
-      <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-16 gap-8">
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 gap-8">
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent px-2 py-1 bg-accent/10 rounded">Control Center</span>
-            <div className="h-[1px] w-12 bg-accent/30" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary px-3 py-1 bg-primary/10 rounded-full">Control Center</span>
           </div>
-          <h1 className="text-6xl font-serif font-light tracking-tight text-ink mb-4">
-            Admin <span className="italic">Dashboard</span>
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4 tracking-tight">
+            Admin Dashboard
           </h1>
-          <p className="text-ink/60 font-sans max-w-md">
+          <p className="text-muted max-w-md">
             Review, approve, and curate the best opportunities for the community.
           </p>
         </div>
-        <div className="flex gap-6">
-          <div className="px-8 py-6 bg-white border border-ink/5 rounded-[2rem] shadow-sm">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/30 block mb-1">Pending</span>
-            <span className="text-3xl font-serif italic text-amber-600">{opportunities.filter(o => !o.isApproved).length}</span>
+        <div className="flex gap-4">
+          <div className="px-8 py-5 bg-white border border-border rounded-3xl shadow-sm">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted block mb-1">Pending</span>
+            <span className="text-3xl font-bold text-amber-600">{opportunities.filter(o => !o.isApproved).length}</span>
           </div>
-          <div className="px-8 py-6 bg-white border border-ink/5 rounded-[2rem] shadow-sm">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/30 block mb-1">Total</span>
-            <span className="text-3xl font-serif italic text-ink">{opportunities.length}</span>
+          <div className="px-8 py-5 bg-white border border-border rounded-3xl shadow-sm">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted block mb-1">Total</span>
+            <span className="text-3xl font-bold text-foreground">{opportunities.length}</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-white border border-ink/10 rounded-[2.5rem] overflow-hidden shadow-xl shadow-ink/5">
+      <div className="bg-white border border-border rounded-[2rem] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-ink/5 border-b border-ink/10">
-                <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">Opportunity</th>
-                <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">Category</th>
-                <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">Status</th>
-                <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 text-right">Actions</th>
+              <tr className="bg-muted/5 border-b border-border">
+                <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-muted">Opportunity</th>
+                <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-muted">Category</th>
+                <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-muted">Status</th>
+                <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-muted text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-ink/5">
+            <tbody className="divide-y divide-border">
               <AnimatePresence mode="popLayout">
                 {opportunities.map((o) => (
                   <motion.tr
@@ -90,14 +89,14 @@ export const Admin: React.FC<Props> = ({ user }) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="hover:bg-ink/[0.02] transition-colors group"
+                    className="hover:bg-muted/5 transition-colors group"
                   >
                     <td className="px-8 py-6">
-                      <div className="font-serif text-xl text-ink mb-1 group-hover:text-accent transition-colors">{o.title}</div>
-                      <div className="text-xs font-sans text-ink/40 uppercase tracking-widest">{o.organization || 'Independent'}</div>
+                      <div className="font-bold text-lg text-foreground mb-1 group-hover:text-primary transition-colors">{o.title}</div>
+                      <div className="text-xs text-muted uppercase tracking-widest">{o.organization || 'Independent'}</div>
                     </td>
                     <td className="px-8 py-6">
-                      <span className="px-3 py-1 bg-ink/5 text-[10px] font-bold uppercase tracking-widest rounded-full text-ink/60">
+                      <span className="px-3 py-1 bg-muted/10 text-[10px] font-bold uppercase tracking-widest rounded-full text-muted">
                         {o.category}
                       </span>
                     </td>
@@ -105,20 +104,20 @@ export const Admin: React.FC<Props> = ({ user }) => {
                       {o.isApproved ? (
                         <div className="flex items-center gap-2 text-emerald-600">
                           <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
-                          <span className="text-xs font-bold uppercase tracking-widest">Approved</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest">Approved</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 text-amber-600">
                           <div className="w-1.5 h-1.5 bg-amber-600 rounded-full" />
-                          <span className="text-xs font-bold uppercase tracking-widest">Pending</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest">Pending</span>
                         </div>
                       )}
                     </td>
                     <td className="px-8 py-6">
-                      <div className="flex items-center justify-end gap-3">
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleApprove(o.id, !o.isApproved)}
-                          className={`p-3 rounded-2xl transition-all duration-300 ${
+                          className={`p-2.5 rounded-xl transition-all ${
                             o.isApproved 
                               ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' 
                               : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
@@ -129,10 +128,10 @@ export const Admin: React.FC<Props> = ({ user }) => {
                         </button>
                         <button
                           onClick={() => handleFeature(o.id, !o.isFeatured)}
-                          className={`p-3 rounded-2xl transition-all duration-300 ${
+                          className={`p-2.5 rounded-xl transition-all ${
                             o.isFeatured 
-                              ? 'bg-accent text-ink shadow-lg shadow-accent/20' 
-                              : 'bg-ink/5 text-ink/30 hover:bg-ink/10'
+                              ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                              : 'bg-muted/5 text-muted hover:bg-muted/10'
                           }`}
                           title={o.isFeatured ? "Unfeature" : "Feature"}
                         >
@@ -140,7 +139,7 @@ export const Admin: React.FC<Props> = ({ user }) => {
                         </button>
                         <button
                           onClick={() => handleDelete(o.id)}
-                          className="p-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-2xl transition-all duration-300"
+                          className="p-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-all"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -149,7 +148,7 @@ export const Admin: React.FC<Props> = ({ user }) => {
                           href={o.applyLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-3 bg-ink/5 text-ink/60 hover:bg-ink/10 rounded-2xl transition-all duration-300"
+                          className="p-2.5 bg-muted/5 text-muted hover:bg-muted/10 rounded-xl transition-all"
                           title="View Source"
                         >
                           <ExternalLink className="w-4 h-4" />

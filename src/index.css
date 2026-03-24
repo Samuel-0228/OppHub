@@ -3,37 +3,50 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
   --font-serif: "Cormorant Garamond", serif;
+  --font-display: "Space Grotesk", sans-serif;
   
-  --color-paper: #F9F7F2;
-  --color-ink: #121212;
-  --color-accent: #C5A059; /* Muted Gold */
-  --color-earth: #4A4439;
+  --color-background: #F8FAFC;
+  --color-foreground: #0F172A;
+  --color-primary: #10B981; /* Vibrant Green */
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #F1F5F9;
+  --color-secondary-foreground: #475569;
+  --color-accent: #3B82F6; /* Blue for secondary accents */
+  --color-muted: #94A3B8;
+  --color-muted-foreground: #64748B;
+  --color-card: #FFFFFF;
+  --color-border: #E2E8F0;
 }
 
 @layer base {
   body {
-    @apply bg-paper text-ink font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight;
+    @apply font-display font-bold tracking-tight;
+  }
+
+  .font-serif {
+    @apply font-serif;
   }
 }
 
-.sloth-card {
-  @apply bg-white rounded-[2rem] transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:-translate-y-1;
-  border: 1px solid rgba(18, 18, 18, 0.1);
+.curvetree-card {
+  @apply bg-card rounded-[2rem] p-8 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 border border-border;
 }
 
 .btn-primary {
-  @apply px-8 py-4 bg-ink text-paper rounded-full font-display font-medium transition-all hover:scale-105 active:scale-95;
+  @apply px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20;
 }
 
 .btn-secondary {
-  @apply px-8 py-4 bg-transparent text-ink rounded-full font-display font-medium transition-all hover:bg-ink hover:text-paper;
-  border: 1px solid rgba(18, 18, 18, 0.1);
+  @apply px-8 py-4 bg-secondary text-secondary-foreground rounded-full font-bold transition-all hover:bg-border hover:scale-[1.02] active:scale-[0.98];
+}
+
+.search-input {
+  @apply w-full px-8 py-5 bg-white border border-border rounded-3xl font-sans text-lg focus:outline-none focus:border-primary/30 shadow-xl shadow-foreground/5 transition-all;
 }
 
 /* Custom scrollbar for that refined look */

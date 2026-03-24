@@ -25,70 +25,55 @@ export const Filters: React.FC<Props> = ({
   setSortBy
 }) => {
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       <div>
-        <h4 className="text-[10px] font-display font-bold uppercase tracking-[0.3em] text-ink/30 mb-6 flex items-center gap-2">
-          Categories
-        </h4>
-        <div className="flex flex-col gap-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`group flex items-center justify-between px-6 py-4 rounded-2xl text-sm font-display font-medium transition-all ${
-                selectedCategory === cat
-                  ? 'bg-ink text-paper'
-                  : 'bg-transparent text-ink/60 hover:bg-ink/5'
-              }`}
-            >
-              <span className="tracking-wide">{cat}</span>
-              {selectedCategory === cat && <div className="w-1.5 h-1.5 bg-accent rounded-full" />}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h4 className="text-[10px] font-display font-bold uppercase tracking-[0.3em] text-ink/30 mb-6 flex items-center gap-2">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-muted mb-4">
           Location
         </h4>
         <button
           onClick={() => setIsRemoteOnly(!isRemoteOnly)}
-          className={`w-full flex items-center justify-between px-6 py-5 rounded-2xl transition-all ${
-            isRemoteOnly ? 'bg-ink text-paper' : 'bg-transparent text-ink/60 hover:bg-ink/5 border border-ink/5'
+          className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all border ${
+            isRemoteOnly 
+              ? 'bg-primary/5 border-primary text-primary' 
+              : 'bg-white border-border text-muted hover:border-primary/30'
           }`}
         >
-          <div className="flex items-center gap-4">
-            <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-colors ${
-              isRemoteOnly ? 'bg-accent border-accent' : 'bg-transparent border-ink/20'
+          <div className="flex items-center gap-3">
+            <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
+              isRemoteOnly ? 'bg-primary border-primary' : 'bg-white border-border'
             }`}>
-              {isRemoteOnly && <Check className="w-3 h-3 text-ink" />}
+              {isRemoteOnly && <Check className="w-3.5 h-3.5 text-white" />}
             </div>
-            <span className="text-sm font-display font-bold uppercase tracking-widest">Remote Only</span>
+            <span className="text-sm font-semibold">Remote Only</span>
           </div>
-          <Globe className={`w-4 h-4 ${isRemoteOnly ? 'text-accent' : 'text-ink/20'}`} />
+          <Globe className={`w-4 h-4 ${isRemoteOnly ? 'text-primary' : 'text-muted/40'}`} />
         </button>
       </div>
 
       <div>
-        <h4 className="text-[10px] font-display font-bold uppercase tracking-[0.3em] text-ink/30 mb-6 flex items-center gap-2">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-muted mb-4">
           Sort By
         </h4>
-        <div className="grid grid-cols-1 gap-2">
+        <div className="space-y-2">
           {[
-            { id: 'newest', label: 'Newest First' },
-            { id: 'deadline', label: 'Deadline Soon' },
-            { id: 'views', label: 'Most Viewed' }
+            { id: 'newest', label: 'Newest First', icon: Clock },
+            { id: 'deadline', label: 'Deadline Soon', icon: Zap },
+            { id: 'views', label: 'Most Viewed', icon: Filter }
           ].map((option) => (
             <button
               key={option.id}
               onClick={() => setSortBy(option.id as any)}
-              className={`flex items-center justify-between px-6 py-5 rounded-2xl transition-all ${
-                sortBy === option.id ? 'bg-ink text-paper' : 'bg-transparent text-ink/60 hover:bg-ink/5 border border-ink/5'
+              className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all border ${
+                sortBy === option.id 
+                  ? 'bg-primary/5 border-primary text-primary' 
+                  : 'bg-white border-border text-muted hover:border-primary/30'
               }`}
             >
-              <span className="text-sm font-display font-bold uppercase tracking-widest">{option.label}</span>
-              {sortBy === option.id && <div className="w-2 h-2 bg-accent rounded-full" />}
+              <div className="flex items-center gap-3">
+                <option.icon className={`w-4 h-4 ${sortBy === option.id ? 'text-primary' : 'text-muted/40'}`} />
+                <span className="text-sm font-semibold">{option.label}</span>
+              </div>
+              {sortBy === option.id && <div className="w-1.5 h-1.5 bg-primary rounded-full" />}
             </button>
           ))}
         </div>
