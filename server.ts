@@ -9,16 +9,19 @@ import admin from "firebase-admin";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+import firebaseConfig from "./firebase-applet-config.json" with { type: "json" };
+
 // Initialize Firebase Admin
 if (!admin.apps.length) {
   admin.initializeApp({
-    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+    projectId: firebaseConfig.projectId,
   });
 }
 const db = admin.firestore();
-// If you need a specific database ID, you can use:
-// const db = admin.firestore().databaseId = process.env.VITE_FIREBASE_DATABASE_ID;
-// But for now, let's stick to the default instance.
+if (firebaseConfig.firestoreDatabaseId) {
+  // @ts-ignore - databaseId is a property of Firestore
+  db.databaseId = firebaseConfig.firestoreDatabaseId;
+}
 
 const app = express();
 const PORT = 3000;

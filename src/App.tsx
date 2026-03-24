@@ -103,7 +103,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary selection:text-white">
-      <Navbar user={user} onSearch={setSearchQuery} />
+      <Navbar user={user} onSearch={setSearchQuery} onNavigate={navigate} />
       
       <main className="pt-20">
         <AnimatePresence mode="wait">
