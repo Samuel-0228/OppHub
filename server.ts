@@ -2,165 +2,214 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
-import { Telegraf } from "telegraf";
-import { GoogleGenAI, Type } from "@google/genai";
-import admin from "firebase-admin";
+import Database from "better-sqlite3";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import axios from "axios";
+import { GoogleGenAI } from "@google/genai";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import firebaseConfig from "./firebase-applet-config.json" with { type: "json" };
+const db = new Database("opportunities.db");
+const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-change-me";
+const ADMIN_PASSWORD_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || "admin123", 10);
 
-// Initialize Firebase Admin
-if (!admin.apps.length) {
-  admin.initializeApp({
-    projectId: firebaseConfig.projectId,
-  });
-}
-const db = admin.firestore();
-if (firebaseConfig.firestoreDatabaseId) {
-  // @ts-ignore - databaseId is a property of Firestore
-  db.databaseId = firebaseConfig.firestoreDatabaseId;
-}
+// Initialize DB
+db.exec(`
+  CREATE TABLE IF NOT EXISTS opportunities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    telegram_id TEXT UNIQUE,
+    title TEXT NOT NULL,
+    type TEXT,
+    organization TEXT,
+    location TEXT,
+    deadline TEXT,
+    apply_link TEXT,
+    description TEXT,
+    category TEXT,
+    tags TEXT,
+    status TEXT DEFAULT 'pending',
+    is_pinned INTEGER DEFAULT 0,
+    is_featured INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    view_count INTEGER DEFAULT 0
+  );
 
-const app = express();
-const PORT = 3000;
-
-app.use(express.json());
-
-// Initialize Gemini
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
-
-// Initialize Telegram Bot
-const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN || "");
-
-// AI Extraction Logic
-async function extractOpportunityData(text: string) {
-  try {
-    const model = "gemini-3-flash-preview";
-    const response = await genAI.models.generateContent({
-      model,
-      contents: `Extract opportunity details from this Telegram post. Return ONLY JSON.
-      Text: "${text}"`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            title: { type: Type.STRING },
-            organization: { type: Type.STRING },
-            description: { type: Type.STRING },
-            category: { 
-              type: Type.STRING, 
-              enum: ["Internships", "Events", "Competitions", "Scholarships", "Jobs", "Fellowships", "Conferences", "Grants", "General"] 
-            },
-            location: { type: Type.STRING },
-            deadline: { type: Type.STRING, description: "ISO 8601 format if possible, otherwise a string" },
-            applyLink: { type: Type.STRING },
-            tags: { type: Type.ARRAY, items: { type: Type.STRING } },
-            field: { type: Type.STRING, description: "Tech, Business, Engineering, etc." },
-            isRemote: { type: Type.BOOLEAN },
-            seoArticle: { type: Type.STRING, description: "A short SEO-friendly article about this opportunity" }
-          },
-          required: ["title", "category", "description"]
-        }
-      }
-    });
-
-    return JSON.parse(response.text || "{}");
-  } catch (error) {
-    console.error("AI Extraction Error:", error);
-    return null;
-  }
-}
-
-// Telegram Webhook
-app.post("/api/telegram-webhook", async (req, res) => {
-  try {
-    const { message, channel_post } = req.body;
-    const post = channel_post || message;
-
-    if (post && post.text) {
-      const extractedData = await extractOpportunityData(post.text);
-      if (extractedData) {
-        await db.collection("opportunities").add({
-          ...extractedData,
-          rawTelegramText: post.text,
-          isApproved: false,
-          isFeatured: false,
-          viewCount: 0,
-          createdAt: new Date().toISOString(),
-        });
-        console.log("Opportunity imported successfully:", extractedData.title);
-      }
-    }
-    res.status(200).send("OK");
-  } catch (error) {
-    console.error("Webhook Error:", error);
-    res.status(500).send("Internal Server Error");
-  }
-});
-
-// Admin endpoint to set webhook (one-time call)
-app.get("/api/setup-telegram", async (req, res) => {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const appUrl = process.env.APP_URL;
-  if (!token || !appUrl) {
-    return res.status(400).send("Missing token or app URL");
-  }
-  try {
-    await bot.telegram.setWebhook(`${appUrl}/api/telegram-webhook`);
-    res.send("Webhook set successfully");
-  } catch (error) {
-    res.status(500).send("Failed to set webhook");
-  }
-});
-
-// Endpoint to share weekly digest back to Telegram
-app.post("/api/share-digest", async (req, res) => {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) return res.status(400).send("Missing token");
-
-  const { internships, scholarships, events, competitions } = req.body;
-  const appUrl = process.env.APP_URL;
-
-  let message = "🌟 *Top Opportunities This Week* 🌟\n\n";
-
-  if (internships?.length) {
-    message += "💼 *Internships:*\n" + internships.map((t: string) => `• ${t}`).join("\n") + "\n\n";
-  }
-  if (scholarships?.length) {
-    message += "🎓 *Scholarships:*\n" + scholarships.map((t: string) => `• ${t}`).join("\n") + "\n\n";
-  }
-  if (events?.length) {
-    message += "📅 *Events:*\n" + events.map((t: string) => `• ${t}`).join("\n") + "\n\n";
-  }
-  if (competitions?.length) {
-    message += "🏆 *Competitions:*\n" + competitions.map((t: string) => `• ${t}`).join("\n") + "\n\n";
-  }
-
-  message += `🚀 View all details and apply here: ${appUrl}/weekly-digest\n\n`;
-  message += "Join our channel for real-time alerts!";
-
-  try {
-    // We need a chat ID. For simplicity, we assume the bot is in the channel and we can send to it.
-    // In a real app, you'd store the channel ID after the first webhook or via config.
-    // For now, we'll try to send it to the channel if we have an ID, or just return success if it's a demo.
-    const channelId = process.env.TELEGRAM_CHANNEL_ID; 
-    if (channelId) {
-      await bot.telegram.sendMessage(channelId, message, { parse_mode: "Markdown" });
-      res.send("Digest shared successfully");
-    } else {
-      console.log("No TELEGRAM_CHANNEL_ID set. Digest message:\n", message);
-      res.send("Digest generated (check server logs as no channel ID is set)");
-    }
-  } catch (error) {
-    console.error("Failed to share digest:", error);
-    res.status(500).send("Failed to share digest");
-  }
-});
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
+`);
 
 async function startServer() {
+  const app = express();
+  app.use(express.json());
+
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+  // Auth Middleware
+  const authenticate = (req: any, res: any, next: any) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      jwt.verify(token, JWT_SECRET);
+      next();
+    } catch {
+      res.status(401).json({ error: "Invalid token" });
+    }
+  };
+
+  // API Routes
+  app.post("/api/login", (req, res) => {
+    const { password } = req.body;
+    if (bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
+      const token = jwt.sign({ role: "admin" }, JWT_SECRET);
+      res.json({ token });
+    } else {
+      res.status(401).json({ error: "Invalid password" });
+    }
+  });
+
+  app.get("/api/opportunities", (req, res) => {
+    const { category, status, search } = req.query;
+    let query = "SELECT * FROM opportunities WHERE 1=1";
+    const params: any[] = [];
+
+    if (category) {
+      query += " AND category = ?";
+      params.push(category);
+    }
+    if (status) {
+      query += " AND status = ?";
+      params.push(status);
+    } else {
+      query += " AND status = 'approved'";
+    }
+    if (search) {
+      query += " AND (title LIKE ? OR organization LIKE ? OR description LIKE ?)";
+      const s = `%${search}%`;
+      params.push(s, s, s);
+    }
+
+    query += " ORDER BY is_pinned DESC, created_at DESC";
+    const rows = db.prepare(query).all(...params);
+    res.json(rows);
+  });
+
+  app.get("/api/opportunities/:id", (req, res) => {
+    const row = db.prepare("SELECT * FROM opportunities WHERE id = ?").get(req.params.id);
+    if (!row) return res.status(404).json({ error: "Not found" });
+    db.prepare("UPDATE opportunities SET view_count = view_count + 1 WHERE id = ?").run(req.params.id);
+    res.json(row);
+  });
+
+  app.post("/api/opportunities/:id/approve", authenticate, (req, res) => {
+    db.prepare("UPDATE opportunities SET status = 'approved' WHERE id = ?").run(req.params.id);
+    res.json({ success: true });
+  });
+
+  app.delete("/api/opportunities/:id", authenticate, (req, res) => {
+    db.prepare("DELETE FROM opportunities WHERE id = ?").run(req.params.id);
+    res.json({ success: true });
+  });
+
+  app.patch("/api/opportunities/:id", authenticate, (req, res) => {
+    const { title, category, organization, deadline, description, apply_link, is_pinned, is_featured } = req.body;
+    db.prepare(`
+      UPDATE opportunities 
+      SET title = ?, category = ?, organization = ?, deadline = ?, description = ?, apply_link = ?, is_pinned = ?, is_featured = ?
+      WHERE id = ?
+    `).run(title, category, organization, deadline, description, apply_link, is_pinned ? 1 : 0, is_featured ? 1 : 0, req.params.id);
+    res.json({ success: true });
+  });
+
+  app.post("/api/sync", authenticate, async (req, res) => {
+    const { botToken, chatId } = req.body;
+    try {
+      // Get last offset
+      const offsetRow = db.prepare("SELECT value FROM settings WHERE key = 'telegram_offset'").get() as { value: string } | undefined;
+      const offset = offsetRow ? parseInt(offsetRow.value) : 0;
+
+      // Fetch updates from Telegram
+      const response = await axios.get(`https://api.telegram.org/bot${botToken}/getUpdates?offset=${offset}`);
+      const updates = response.data.result;
+      
+      let importedCount = 0;
+      let lastUpdateId = offset - 1;
+
+      for (const update of updates) {
+        lastUpdateId = update.update_id;
+        const message = update.channel_post || update.message;
+        if (!message || !message.text) continue;
+
+        // If it's a channel post, check if it's from the right chat (optional but good)
+        // if (chatId && message.chat.id.toString() !== chatId) continue;
+
+        const telegramId = message.message_id.toString();
+        const existing = db.prepare("SELECT id FROM opportunities WHERE telegram_id = ?").get(telegramId);
+        if (existing) continue;
+
+        // AI Processing
+        const prompt = `
+          Extract structured information from this Telegram post about an opportunity.
+          Return a JSON object with these fields:
+          - title (string)
+          - type (string: Internship, Event, Competition, Scholarship, Job, Fellowship, Conference, Grant, or General)
+          - organization (string)
+          - location (string)
+          - deadline (string, ISO format if possible or readable)
+          - apply_link (string)
+          - description (string, detailed)
+          - category (string, one of: Internships, Events, Competitions, Scholarships, Jobs, Fellowships, Conferences, Grants, General)
+          - tags (array of strings)
+
+          Post content:
+          ${message.text}
+        `;
+
+        const aiResponse = await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: prompt,
+          config: { responseMimeType: "application/json" }
+        });
+
+        const data = JSON.parse(aiResponse.text || "{}");
+        
+        db.prepare(`
+          INSERT INTO opportunities (telegram_id, title, type, organization, location, deadline, apply_link, description, category, tags, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+        `).run(
+          telegramId,
+          data.title || "Untitled Opportunity",
+          data.type || "General",
+          data.organization || "Unknown",
+          data.location || "Remote",
+          data.deadline || "",
+          data.apply_link || "",
+          data.description || message.text,
+          data.category || "General",
+          JSON.stringify(data.tags || []),
+        );
+        importedCount++;
+      }
+
+      // Update offset
+      if (lastUpdateId >= offset) {
+        db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('telegram_offset', ?)").run((lastUpdateId + 1).toString());
+      }
+
+      res.json({ success: true, importedCount });
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Vite setup
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -175,8 +224,8 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  app.listen(3000, "0.0.0.0", () => {
+    console.log("Server running on http://localhost:3000");
   });
 }
 
