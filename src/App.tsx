@@ -83,7 +83,7 @@ const Navbar = ({ isAdmin }: { isAdmin: boolean }) => {
               <Link to="/login" className="text-sm font-medium text-gray-500 hover:text-black">Admin Login</Link>
             )}
             <a 
-              href="https://t.me/dillnaod" 
+              href="https://t.me/your_channel" 
               target="_blank" 
               className="px-5 py-2 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-orange-600 transition-all rounded-full flex items-center space-x-2"
             >
@@ -428,11 +428,13 @@ const AdminDashboard = () => {
   const [syncing, setSyncing] = useState(false);
   const [botToken, setBotToken] = useState("");
   const [chatId, setChatId] = useState("");
+  const [savingSettings, setSavingSettings] = useState(false);
   const token = localStorage.getItem("admin_token");
 
   useEffect(() => {
     if (!token) window.location.href = "/login";
     fetchOpps();
+    fetchSettings();
   }, [token]);
 
   const fetchOpps = () => {
@@ -444,6 +446,36 @@ const AdminDashboard = () => {
         setOpps(data);
         setLoading(false);
       });
+  };
+
+  const fetchSettings = () => {
+    fetch("/api/settings", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.telegram_bot_token) setBotToken(data.telegram_bot_token);
+        if (data.telegram_chat_id) setChatId(data.telegram_chat_id);
+      });
+  };
+
+  const saveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ telegram_bot_token: botToken, telegram_chat_id: chatId })
+      });
+      alert("Settings saved! Automatic sync is active.");
+    } catch (err) {
+      alert("Failed to save settings");
+    } finally {
+      setSavingSettings(false);
+    }
   };
 
   const handleSync = async () => {
@@ -488,31 +520,47 @@ const AdminDashboard = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
-        <h1 className="text-4xl font-black uppercase tracking-tighter">Dashboard</h1>
+        <div>
+          <h1 className="text-4xl font-black uppercase tracking-tighter">Dashboard</h1>
+          <p className="text-xs font-bold text-gray-400 mt-2 flex items-center">
+            <Clock size={12} className="mr-1" /> System polls Telegram every 5 minutes automatically.
+          </p>
+        </div>
         
         <div className="flex flex-col md:flex-row gap-4 bg-gray-50 p-4 border border-black/5 rounded-lg w-full md:w-auto">
-          <input 
-            type="text" 
-            placeholder="Bot Token" 
-            className="px-3 py-2 text-xs border border-black/10 focus:outline-none focus:ring-2 focus:ring-orange-200"
-            value={botToken}
-            onChange={(e) => setBotToken(e.target.value)}
-          />
-          <input 
-            type="text" 
-            placeholder="Channel ID" 
-            className="px-3 py-2 text-xs border border-black/10 focus:outline-none focus:ring-2 focus:ring-orange-200"
-            value={chatId}
-            onChange={(e) => setChatId(e.target.value)}
-          />
-          <button 
-            onClick={handleSync}
-            disabled={syncing}
-            className="px-6 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest flex items-center space-x-2 disabled:opacity-50"
-          >
-            {syncing ? <RefreshCw className="animate-spin" size={14} /> : <RefreshCw size={14} />}
-            <span>Sync Telegram</span>
-          </button>
+          <div className="flex flex-col gap-2">
+            <input 
+              type="text" 
+              placeholder="Bot Token" 
+              className="px-3 py-2 text-xs border border-black/10 focus:outline-none focus:ring-2 focus:ring-orange-200"
+              value={botToken}
+              onChange={(e) => setBotToken(e.target.value)}
+            />
+            <input 
+              type="text" 
+              placeholder="Channel ID" 
+              className="px-3 py-2 text-xs border border-black/10 focus:outline-none focus:ring-2 focus:ring-orange-200"
+              value={chatId}
+              onChange={(e) => setChatId(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <button 
+              onClick={saveSettings}
+              disabled={savingSettings}
+              className="px-6 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest flex items-center justify-center space-x-2 disabled:opacity-50"
+            >
+              <span>Save Settings</span>
+            </button>
+            <button 
+              onClick={handleSync}
+              disabled={syncing}
+              className="px-6 py-2 border-2 border-black text-black text-[10px] font-black uppercase tracking-widest flex items-center justify-center space-x-2 disabled:opacity-50"
+            >
+              {syncing ? <RefreshCw className="animate-spin" size={14} /> : <RefreshCw size={14} />}
+              <span>Sync Now</span>
+            </button>
+          </div>
         </div>
       </div>
 
