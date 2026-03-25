@@ -9,7 +9,7 @@ interface Props {
 }
 
 const pillInactive =
-  'bg-[var(--oh-surface)] border-[var(--oh-border)] text-[var(--oh-text-muted)] hover:border-[rgba(56,189,248,0.25)]';
+  'bg-[var(--oh-surface)] border-[var(--oh-border)] text-[var(--oh-text-muted)] hover:border-[rgba(255,255,255,0.25)]';
 const pillActive =
   'bg-[var(--oh-accent-dim)] border-[var(--oh-border-strong)] text-[var(--oh-accent-bright)]';
 

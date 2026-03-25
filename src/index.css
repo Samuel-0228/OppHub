@@ -3,31 +3,42 @@
 
 /* ——— OppHub design tokens (single source of truth) ——— */
 :root {
-  --oh-canvas: #050810;
-  --oh-surface: #0b101c;
-  --oh-elevated: #111827;
-  --oh-surface-glow: #152034;
-  --oh-border: rgba(120, 170, 255, 0.12);
-  --oh-border-strong: rgba(56, 189, 248, 0.35);
-  --oh-text: #e8eefc;
-  --oh-text-muted: #8b9cc8;
-  --oh-text-subtle: #5c6b94;
-  --oh-accent: #38bdf8;
-  --oh-accent-bright: #7dd3fc;
-  --oh-accent-dim: rgba(56, 189, 248, 0.12);
-  --oh-accent-glow: rgba(56, 189, 248, 0.35);
+  --oh-primary-foreground: #050810;
+
+  /* Black premium / sharp / white UI */
+  --oh-canvas: #000000;
+  --oh-surface: #0b0f14;
+  --oh-elevated: #101722;
+  --oh-surface-glow: #121c2a;
+
+  --oh-border: rgba(255, 255, 255, 0.1);
+  --oh-border-strong: rgba(255, 255, 255, 0.18);
+
+  --oh-text: #ffffff;
+  --oh-text-muted: rgba(255, 255, 255, 0.72);
+  --oh-text-subtle: rgba(255, 255, 255, 0.55);
+
+  /* Keep a subtle silver accent (not neon) */
+  --oh-accent: #e5e7eb;
+  --oh-accent-bright: #ffffff;
+  --oh-accent-dim: rgba(229, 231, 235, 0.12);
+  --oh-accent-glow: rgba(229, 231, 235, 0.22);
+
   --oh-success: #34d399;
   --oh-success-dim: rgba(52, 211, 153, 0.15);
   --oh-warning: #fbbf24;
   --oh-warning-dim: rgba(251, 191, 36, 0.15);
   --oh-danger: #f87171;
   --oh-danger-dim: rgba(248, 113, 113, 0.12);
-  --oh-radius-sm: 10px;
-  --oh-radius: 14px;
-  --oh-radius-lg: 20px;
-  --oh-radius-xl: 28px;
-  --oh-shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
-  --oh-shadow-glow: 0 0 40px var(--oh-accent-glow);
+
+  /* Sharper corners */
+  --oh-radius-sm: 8px;
+  --oh-radius: 10px;
+  --oh-radius-lg: 14px;
+  --oh-radius-xl: 20px;
+
+  --oh-shadow-card: 0 4px 18px rgba(0, 0, 0, 0.45);
+  --oh-shadow-glow: 0 0 28px var(--oh-accent-glow);
   --oh-font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --oh-font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
   --oh-transition: 0.22s cubic-bezier(0.23, 1, 0.32, 1);
@@ -40,7 +51,7 @@
   --color-background: var(--oh-canvas);
   --color-foreground: var(--oh-text);
   --color-primary: var(--oh-accent);
-  --color-primary-foreground: #041018;
+  --color-primary-foreground: var(--oh-primary-foreground);
   --color-secondary: var(--oh-surface);
   --color-secondary-foreground: var(--oh-text);
   --color-accent: var(--oh-accent-bright);
@@ -94,22 +105,22 @@
 
 .oh-grid-bg {
   background-image: linear-gradient(
-      rgba(56, 189, 248, 0.03) 1px,
+      rgba(229, 231, 235, 0.045) 1px,
       transparent 1px
     ),
-    linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+    linear-gradient(90deg, rgba(229, 231, 235, 0.045) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
 .oh-hero-gradient {
   background: radial-gradient(
       ellipse 80% 60% at 50% -30%,
-      rgba(56, 189, 248, 0.22),
+      rgba(229, 231, 235, 0.14),
       transparent 55%
     ),
     radial-gradient(
       ellipse 50% 40% at 100% 0%,
-      rgba(99, 102, 241, 0.12),
+      rgba(255, 255, 255, 0.08),
       transparent 45%
     );
 }
@@ -125,8 +136,8 @@
 }
 
 .oh-card:hover {
-  border-color: rgba(56, 189, 248, 0.28);
-  box-shadow: var(--oh-shadow-card), 0 0 0 1px rgba(56, 189, 248, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: var(--oh-shadow-card), 0 0 0 1px rgba(255, 255, 255, 0.08);
   transform: translateY(-3px);
 }
 
@@ -134,9 +145,9 @@
   background: linear-gradient(
     135deg,
     var(--oh-accent) 0%,
-    #0ea5e9 100%
+    var(--oh-accent-bright) 100%
   );
-  color: var(--oh-primary-foreground, #041018);
+  color: var(--oh-primary-foreground, #050810);
   font-weight: 700;
   border-radius: 999px;
   padding: 0.75rem 1.35rem;
@@ -162,7 +173,7 @@
 }
 
 .btn-secondary:hover {
-  border-color: rgba(56, 189, 248, 0.35);
+  border-color: rgba(255, 255, 255, 0.25);
   background: var(--oh-surface-glow);
 }
 
@@ -274,7 +285,7 @@
 }
 
 .oh-table tbody tr:hover {
-  background: rgba(56, 189, 248, 0.04);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .oh-table td {
@@ -287,7 +298,7 @@
   background: linear-gradient(
     180deg,
     var(--oh-accent) 0%,
-    rgba(56, 189, 248, 0.35) 100%
+    rgba(229, 231, 235, 0.35) 100%
   );
   border-radius: 4px 4px 0 0;
   min-height: 4px;
@@ -311,12 +322,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(56, 189, 248, 0.22);
+  background: rgba(229, 231, 235, 0.22);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(56, 189, 248, 0.35);
+  background: rgba(229, 231, 235, 0.35);
 }
 
 .scrollbar-hide {

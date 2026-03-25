@@ -116,7 +116,7 @@ export const Home: React.FC<Props> = ({ user, onSelectOpportunity }) => {
               style={{ fontFamily: 'var(--oh-font-display)' }}
             >
               Discover your next{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--oh-accent)] via-sky-300 to-[var(--oh-accent-bright)]">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--oh-accent)] to-[var(--oh-accent-bright)]">
                 breakthrough
               </span>{' '}
               opportunity
@@ -154,7 +154,7 @@ export const Home: React.FC<Props> = ({ user, onSelectOpportunity }) => {
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-[var(--oh-transition)] border ${
                   active
                     ? 'bg-[var(--oh-accent-dim)] text-[var(--oh-accent-bright)] border-[var(--oh-border-strong)] shadow-[0_0_24px_var(--oh-accent-glow)]'
-                    : 'bg-[var(--oh-surface)] text-[var(--oh-text-muted)] border-[var(--oh-border)] hover:border-[rgba(56,189,248,0.3)] hover:text-[var(--oh-text)]'
+                    : 'bg-[var(--oh-surface)] text-[var(--oh-text-muted)] border-[var(--oh-border)] hover:border-[rgba(255,255,255,0.25)] hover:text-[var(--oh-text)]'
                 }`}
               >
                 <cat.icon className="w-4 h-4 opacity-80" />

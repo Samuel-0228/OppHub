@@ -10,7 +10,7 @@ import { Admin } from './pages/Admin';
 import { Bookmarks } from './pages/Bookmarks';
 import { WeeklyDigest } from './pages/WeeklyDigest';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles } from 'lucide-react';
+import { OppHubLogo } from './components/OppHubLogo';
 
 function syncPathToState(
   setPage: React.Dispatch<React.SetStateAction<'home' | 'detail' | 'admin' | 'bookmarks' | 'weekly-digest'>>,
@@ -97,8 +97,8 @@ export default function App() {
         <div className="flex flex-col items-center gap-8">
           <div className="relative w-[5.5rem] h-[5.5rem]">
             <div className="absolute inset-0 rounded-3xl bg-[var(--oh-accent-dim)] animate-ping opacity-40" />
-            <div className="relative w-[5.5rem] h-[5.5rem] rounded-3xl bg-gradient-to-br from-[var(--oh-accent)] to-sky-600 flex items-center justify-center shadow-[0_12px_48px_var(--oh-accent-glow)]">
-              <Sparkles className="w-9 h-9 text-[var(--oh-primary-foreground,#041018)]" strokeWidth={2.2} />
+            <div className="relative w-[5.5rem] h-[5.5rem] rounded-3xl bg-gradient-to-br from-[var(--oh-accent)] to-[var(--oh-accent-bright)] flex items-center justify-center shadow-[0_12px_48px_var(--oh-accent-glow)]">
+              <OppHubLogo className="w-9 h-9 text-[var(--oh-primary-foreground,#041018)]" />
             </div>
           </div>
           <div className="flex flex-col items-center text-center">
@@ -191,8 +191,8 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-11 h-11 rounded-[var(--oh-radius)] bg-gradient-to-br from-[var(--oh-accent)] to-sky-600 flex items-center justify-center shadow-[0_8px_28px_var(--oh-accent-glow)]">
-                  <Sparkles className="w-5 h-5 text-[var(--oh-primary-foreground,#041018)]" />
+                <div className="w-11 h-11 rounded-[var(--oh-radius)] bg-gradient-to-br from-[var(--oh-accent)] to-[var(--oh-accent-bright)] flex items-center justify-center shadow-[0_8px_28px_var(--oh-accent-glow)]">
+                  <OppHubLogo className="w-5 h-5 text-[var(--oh-primary-foreground,#041018)]" />
                 </div>
                 <span className="text-2xl font-extrabold tracking-tight text-[var(--oh-text)]" style={{ fontFamily: 'var(--oh-font-display)' }}>
                   OppHub
@@ -222,7 +222,7 @@ export default function App() {
               <span className="w-2 h-2 rounded-full bg-[var(--oh-success)] shadow-[0_0_10px_var(--oh-success)]" />
               Systems operational
             </div>
-            <span className="text-[10px] text-[var(--oh-text-subtle)]">Design system: electric / Syne + DM Sans</span>
+            <span className="text-[10px] text-[var(--oh-text-subtle)]">Design system: black premium / Syne + DM Sans</span>
           </div>
         </div>
       </footer>
