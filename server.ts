@@ -3,8 +3,6 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 import axios from "axios";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -17,35 +15,97 @@ const __dirname = path.dirname(__filename);
 // Initialize Supabase
 const supabaseUrl = process.env.SUPABASE_URL || "";
 const supabaseKey = process.env.SUPABASE_ANON_KEY || "";
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
+const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@opphub.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
-if (process.env.ADMIN_PASSWORD) {
-  console.log("ADMIN_PASSWORD is set from environment variables.");
-} else {
-  console.log("ADMIN_PASSWORD is not set, using default 'admin123'.");
+
+// Bootstrap Admin User
+async function bootstrapAdmin() {
+  if (!supabaseServiceKey) {
+    console.warn("SUPABASE_SERVICE_ROLE_KEY not set. Skipping admin user bootstrap.");
+    return;
+  }
+
+  console.log(`Bootstrapping admin user: ${ADMIN_EMAIL}...`);
+  try {
+    // Check if user exists
+    const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    if (listError) throw listError;
+
+    const adminUser = users.users.find(u => u.email === ADMIN_EMAIL);
+
+    if (adminUser) {
+      console.log("Admin user exists. Updating password...");
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(adminUser.id, {
+        password: ADMIN_PASSWORD,
+        email_confirm: true
+      });
+      if (updateError) throw updateError;
+    } else {
+      console.log("Admin user does not exist. Creating...");
+      const { error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email: ADMIN_EMAIL,
+        password: ADMIN_PASSWORD,
+        email_confirm: true,
+        user_metadata: { role: "admin" }
+      });
+      if (createError) throw createError;
+    }
+    console.log("Admin user bootstrap complete.");
+  } catch (error) {
+    console.error("Admin bootstrap failed:", error);
+  }
 }
-const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-change-me";
 
 async function startServer() {
+  await bootstrapAdmin();
+
   const app = express();
   app.use(express.json());
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-  // Auth Middleware
-  const authenticate = (req: any, res: any, next: any) => {
+  // Auth Middleware using Supabase
+  const authenticate = async (req: any, res: any, next: any) => {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({ error: "Unauthorized" });
+    
     try {
-      jwt.verify(token, JWT_SECRET);
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (error || !user) throw error;
+      req.user = user;
       next();
-    } catch {
-      res.status(401).json({ error: "Invalid token" });
+    } catch (error) {
+      res.status(401).json({ error: "Invalid or expired session" });
     }
   };
 
   // API Routes
+  app.get("/api/health", async (req, res) => {
+    try {
+      const { data: opps, error: oppsError } = await supabase.from("opportunities").select("id").limit(1);
+      const { data: settings, error: settingsError } = await supabase.from("settings").select("key").limit(1);
+      
+      res.json({
+        status: "ok",
+        supabase: {
+          opportunities_table: !oppsError,
+          settings_table: !settingsError,
+          errors: {
+            opportunities: oppsError?.message,
+            settings: settingsError?.message
+          }
+        }
+      });
+    } catch (err: any) {
+      res.status(500).json({ status: "error", message: err.message });
+    }
+  });
+
   app.get("/api/settings", authenticate, async (req, res) => {
     const { data, error } = await supabase.from("settings").select("*");
     if (error) return res.status(500).json({ error: error.message });
@@ -66,13 +126,18 @@ async function startServer() {
     res.json({ success: true });
   });
 
-  app.post("/api/login", (req, res) => {
+  app.post("/api/login", async (req, res) => {
     const { password } = req.body;
-    if (password === ADMIN_PASSWORD) {
-      const token = jwt.sign({ role: "admin" }, JWT_SECRET);
-      res.json({ token });
-    } else {
-      res.status(401).json({ error: "Invalid password" });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: ADMIN_EMAIL,
+        password: password
+      });
+
+      if (error) throw error;
+      res.json({ token: data.session?.access_token });
+    } catch (error: any) {
+      res.status(401).json({ error: error.message || "Invalid password" });
     }
   });
 
@@ -132,12 +197,22 @@ async function startServer() {
 
   app.post("/api/sync", authenticate, async (req, res) => {
     const { botToken, chatId } = req.body;
+    console.log("Manual sync triggered...");
     try {
-      const { data: offsetData } = await supabase.from("settings").select("value").eq("key", "telegram_offset").single();
+      // Get last offset - use maybeSingle to avoid error if not found
+      const { data: offsetData, error: offsetError } = await supabase
+        .from("settings")
+        .select("value")
+        .eq("key", "telegram_offset")
+        .maybeSingle();
+      
+      if (offsetError) console.error("Error fetching offset:", offsetError);
       const offset = offsetData ? parseInt(offsetData.value) : 0;
+      console.log(`Current Telegram offset: ${offset}`);
 
       const response = await axios.get(`https://api.telegram.org/bot${botToken}/getUpdates?offset=${offset}`);
       const updates = response.data.result;
+      console.log(`Fetched ${updates.length} updates from Telegram.`);
       
       let importedCount = 0;
       let lastUpdateId = offset - 1;
@@ -148,9 +223,21 @@ async function startServer() {
         if (!message || !message.text) continue;
 
         const telegramId = message.message_id.toString();
-        const { data: existing } = await supabase.from("opportunities").select("id").eq("telegram_id", telegramId).single();
-        if (existing) continue;
+        
+        // Check if already exists - use maybeSingle
+        const { data: existing, error: checkError } = await supabase
+          .from("opportunities")
+          .select("id")
+          .eq("telegram_id", telegramId)
+          .maybeSingle();
+        
+        if (checkError) console.error("Error checking existing:", checkError);
+        if (existing) {
+          console.log(`Skipping duplicate Telegram ID: ${telegramId}`);
+          continue;
+        }
 
+        console.log(`Processing message ${telegramId} with AI...`);
         const prompt = `
           Extract structured information from this Telegram post about an opportunity.
           Return a JSON object with these fields:
@@ -190,16 +277,24 @@ async function startServer() {
           status: 'pending'
         });
 
-        if (!insertError) importedCount++;
+        if (insertError) {
+          console.error(`Error inserting opportunity ${telegramId}:`, insertError);
+        } else {
+          console.log(`Successfully imported opportunity: ${data.title}`);
+          importedCount++;
+        }
       }
 
       if (lastUpdateId >= offset) {
-        await supabase.from("settings").upsert({ key: "telegram_offset", value: (lastUpdateId + 1).toString() });
+        const { error: upsertError } = await supabase
+          .from("settings")
+          .upsert({ key: "telegram_offset", value: (lastUpdateId + 1).toString() });
+        if (upsertError) console.error("Error updating offset:", upsertError);
       }
 
       res.json({ success: true, importedCount });
     } catch (error: any) {
-      console.error(error);
+      console.error("Sync process error:", error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -225,15 +320,38 @@ async function startServer() {
 
   // Background Polling
   const pollTelegram = async () => {
-    const { data: botTokenData } = await supabase.from("settings").select("value").eq("key", "telegram_bot_token").single();
-    if (!botTokenData?.value) return;
+    console.log("Background poll checking for updates...");
+    const { data: botTokenData, error: tokenError } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "telegram_bot_token")
+      .maybeSingle();
+    
+    if (tokenError) {
+      console.error("Background poll: Error fetching bot token:", tokenError);
+      return;
+    }
+    if (!botTokenData?.value) {
+      console.log("Background poll: No bot token found in settings.");
+      return;
+    }
 
     try {
-      const { data: offsetData } = await supabase.from("settings").select("value").eq("key", "telegram_offset").single();
+      const { data: offsetData, error: offsetError } = await supabase
+        .from("settings")
+        .select("value")
+        .eq("key", "telegram_offset")
+        .maybeSingle();
+      
+      if (offsetError) console.error("Background poll: Error fetching offset:", offsetError);
       const offset = offsetData ? parseInt(offsetData.value) : 0;
 
       const response = await axios.get(`https://api.telegram.org/bot${botTokenData.value}/getUpdates?offset=${offset}`);
       const updates = response.data.result;
+      
+      if (updates.length > 0) {
+        console.log(`Background poll: Found ${updates.length} new updates.`);
+      }
       
       let lastUpdateId = offset - 1;
 
@@ -243,9 +361,18 @@ async function startServer() {
         if (!message || !message.text) continue;
 
         const telegramId = message.message_id.toString();
-        const { data: existing } = await supabase.from("opportunities").select("id").eq("telegram_id", telegramId).single();
+        
+        // Check if already exists
+        const { data: existing, error: checkError } = await supabase
+          .from("opportunities")
+          .select("id")
+          .eq("telegram_id", telegramId)
+          .maybeSingle();
+        
+        if (checkError) console.error("Background poll: Error checking existing:", checkError);
         if (existing) continue;
 
+        console.log(`Background poll: Processing message ${telegramId}...`);
         const prompt = `
           Extract structured information from this Telegram post about an opportunity.
           Return a JSON object with these fields:
@@ -271,7 +398,7 @@ async function startServer() {
 
         const data = JSON.parse(aiResponse.text || "{}");
         
-        await supabase.from("opportunities").insert({
+        const { error: insertError } = await supabase.from("opportunities").insert({
           telegram_id: telegramId,
           title: data.title || "Untitled Opportunity",
           type: data.type || "General",
@@ -284,10 +411,19 @@ async function startServer() {
           tags: data.tags || [],
           status: 'pending'
         });
+
+        if (insertError) {
+          console.error(`Background poll: Error inserting ${telegramId}:`, insertError);
+        } else {
+          console.log(`Background poll: Imported ${data.title}`);
+        }
       }
 
       if (lastUpdateId >= offset) {
-        await supabase.from("settings").upsert({ key: "telegram_offset", value: (lastUpdateId + 1).toString() });
+        const { error: upsertError } = await supabase
+          .from("settings")
+          .upsert({ key: "telegram_offset", value: (lastUpdateId + 1).toString() });
+        if (upsertError) console.error("Background poll: Error updating offset:", upsertError);
       }
     } catch (error) {
       console.error("Background poll error:", error);

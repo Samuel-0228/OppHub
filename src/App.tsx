@@ -38,7 +38,7 @@ interface Opportunity {
   apply_link: string;
   description: string;
   category: string;
-  tags: string; // JSON string
+  tags: string | string[]; // Can be JSON string or array
   status: string;
   is_pinned: number;
   is_featured: number;
@@ -120,7 +120,7 @@ const Navbar = ({ isAdmin }: { isAdmin: boolean }) => {
 
 const OpportunityCard = ({ opp }: { opp: Opportunity }) => {
   const status = getDeadlineStatus(opp.deadline);
-  const tags = JSON.parse(opp.tags || "[]");
+  const tags = Array.isArray(opp.tags) ? opp.tags : JSON.parse(opp.tags || "[]");
 
   return (
     <motion.div 
@@ -291,7 +291,7 @@ const OpportunityDetail = () => {
   if (loading) return <div className="max-w-4xl mx-auto px-4 py-20 animate-pulse h-screen bg-gray-50" />;
   if (!opp) return <div className="text-center py-20">Not found</div>;
 
-  const tags = JSON.parse(opp.tags || "[]");
+  const tags = Array.isArray(opp.tags) ? opp.tags : JSON.parse(opp.tags || "[]");
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
@@ -429,13 +429,26 @@ const AdminDashboard = () => {
   const [botToken, setBotToken] = useState("");
   const [chatId, setChatId] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
+  const [health, setHealth] = useState<any>(null);
   const token = localStorage.getItem("admin_token");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token) window.location.href = "/login";
+    if (!token) navigate("/login");
     fetchOpps();
     fetchSettings();
+    checkHealth();
   }, [token]);
+
+  const checkHealth = async () => {
+    try {
+      const res = await fetch("/api/health");
+      const data = await res.json();
+      setHealth(data);
+    } catch (err) {
+      console.error("Health check failed");
+    }
+  };
 
   const fetchOpps = () => {
     fetch("/api/opportunities?status=all", {
@@ -525,6 +538,16 @@ const AdminDashboard = () => {
           <p className="text-xs font-bold text-gray-400 mt-2 flex items-center">
             <Clock size={12} className="mr-1" /> System polls Telegram every 5 minutes automatically.
           </p>
+          {health && (!health.supabase.opportunities_table || !health.supabase.settings_table) && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-xs font-bold text-red-600 uppercase tracking-widest mb-2">Supabase Setup Incomplete</p>
+              <p className="text-[10px] text-red-500 font-medium">
+                {!health.supabase.opportunities_table && "• 'opportunities' table missing. "}
+                {!health.supabase.settings_table && "• 'settings' table missing. "}
+              </p>
+              <p className="text-[10px] text-red-400 mt-1 italic">Please run the SQL schema in your Supabase SQL Editor.</p>
+            </div>
+          )}
         </div>
         
         <div className="flex flex-col md:flex-row gap-4 bg-gray-50 p-4 border border-black/5 rounded-lg w-full md:w-auto">
