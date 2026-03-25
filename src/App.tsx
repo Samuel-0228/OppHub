@@ -38,38 +38,50 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const userRef = doc(db, 'users', firebaseUser.uid);
-        const userSnap = await getDoc(userRef);
+      try {
+        if (firebaseUser) {
+          const userRef = doc(db, 'users', firebaseUser.uid);
+          const userSnap = await getDoc(userRef);
 
-        if (userSnap.exists()) {
-          const userData = userSnap.data() as UserProfile;
-          const isAdmin = firebaseUser.email === 'ytsamuael@gmail.com';
+          if (userSnap.exists()) {
+            const userData = userSnap.data() as UserProfile;
+            const isAdmin = firebaseUser.email === 'ytsamuael@gmail.com';
+            const hydratedUser: UserProfile = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || userData.email || '',
+              displayName: firebaseUser.displayName || userData.displayName || firebaseUser.email?.split('@')[0] || 'Member',
+              photoURL: firebaseUser.photoURL || userData.photoURL || '',
+              role: isAdmin ? 'admin' : userData.role,
+              createdAt: userData.createdAt,
+            };
 
-          if (isAdmin && userData.role !== 'admin') {
-            const updatedUser = { ...userData, role: 'admin' as const };
-            await updateDoc(userRef, { role: 'admin' });
-            setUser(updatedUser);
+            if (isAdmin && userData.role !== 'admin') {
+              await updateDoc(userRef, { role: 'admin' });
+            }
+
+            setUser(hydratedUser);
           } else {
-            setUser(userData);
+            const isAdmin = firebaseUser.email === 'ytsamuael@gmail.com';
+            const newUser: UserProfile = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Member',
+              photoURL: firebaseUser.photoURL || '',
+              role: isAdmin ? 'admin' : 'user',
+              createdAt: new Date().toISOString(),
+            };
+            await setDoc(userRef, newUser);
+            setUser(newUser);
           }
         } else {
-          const isAdmin = firebaseUser.email === 'ytsamuael@gmail.com';
-          const newUser: UserProfile = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            displayName: firebaseUser.displayName || '',
-            photoURL: firebaseUser.photoURL || '',
-            role: isAdmin ? 'admin' : 'user',
-            createdAt: new Date().toISOString(),
-          };
-          await setDoc(userRef, newUser);
-          setUser(newUser);
+          setUser(null);
         }
-      } else {
+      } catch (error) {
+        console.error('Failed to synchronize auth user:', error);
         setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
