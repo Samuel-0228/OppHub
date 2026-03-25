@@ -15,8 +15,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const db = new Database("opportunities.db");
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+if (process.env.ADMIN_PASSWORD) {
+  console.log("ADMIN_PASSWORD is set from environment variables.");
+} else {
+  console.log("ADMIN_PASSWORD is not set, using default 'admin123'.");
+}
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-change-me";
-const ADMIN_PASSWORD_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || "admin123", 10);
 
 // Initialize DB
 db.exec(`
@@ -79,7 +84,7 @@ async function startServer() {
 
   app.post("/api/login", (req, res) => {
     const { password } = req.body;
-    if (bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
+    if (password === ADMIN_PASSWORD) {
       const token = jwt.sign({ role: "admin" }, JWT_SECRET);
       res.json({ token });
     } else {

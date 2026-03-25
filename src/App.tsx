@@ -83,7 +83,7 @@ const Navbar = ({ isAdmin }: { isAdmin: boolean }) => {
               <Link to="/login" className="text-sm font-medium text-gray-500 hover:text-black">Admin Login</Link>
             )}
             <a 
-              href="https://t.me/your_channel" 
+              href="https://t.me/dillnaod" 
               target="_blank" 
               className="px-5 py-2 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-orange-600 transition-all rounded-full flex items-center space-x-2"
             >
