@@ -1,5 +1,5 @@
 {
   "name": "Opportunity Hub",
-  "description": "An automated platform that transforms Telegram channel posts into a structured, searchable opportunity database using AI.",
+  "description": "A platform to find and manage opportunities from Telegram and beyond.",
   "requestFramePermissions": []
 }

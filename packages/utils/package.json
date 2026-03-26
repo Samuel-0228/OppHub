@@ -1,0 +1,14 @@
+{
+  "name": "@platform/utils",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "build": "echo 'No build needed for utils'",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0"
+  }
+}
