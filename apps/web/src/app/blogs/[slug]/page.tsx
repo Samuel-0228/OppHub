@@ -54,7 +54,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="bg-blue-50 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-left">
             <h3 className="text-xl font-bold text-gray-900">Interested in this opportunity?</h3>
-            <p className="text-blue-600/80">Don't miss out on the deadline!</p>
+            <p className="text-blue-600/80">Don&apos;t miss out on the deadline!</p>
           </div>
           {post.apply_link && (
             <a 

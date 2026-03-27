@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { MapPin, Building2, Calendar, ExternalLink, ArrowRight, Star } from 'lucide-react';
-import { Post } from '@/../../packages/types/Post';
+import { Post } from '@platform/types';
 import { formatDate } from '@/utils';
 
 interface OpportunityCardProps {

@@ -84,7 +84,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Browse by Category</h2>
-            <p className="mt-4 text-lg text-gray-500">Find exactly what you're looking for</p>
+            <p className="mt-4 text-lg text-gray-500">Find exactly what you&apos;re looking for</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {categories.map((cat) => (

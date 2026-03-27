@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, 
@@ -14,7 +14,7 @@ import {
   ExternalLink,
   Loader2
 } from 'lucide-react';
-import { Post } from '@/../../packages/types/Post';
+import { Post } from '@platform/types';
 import { cn } from '@/utils';
 
 export default function AdminDashboard() {
@@ -37,15 +37,7 @@ export default function AdminDashboard() {
     setToken(storedToken);
   }, [router]);
 
-  useEffect(() => {
-    if (token) {
-      fetchOpps();
-      fetchSettings();
-      checkHealth();
-    }
-  }, [token]);
-
-  const checkHealth = async () => {
+  const checkHealth = useCallback(async () => {
     try {
       const res = await fetch('/api/health');
       const data = await res.json();
@@ -53,9 +45,9 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Health check failed');
     }
-  };
+  }, []);
 
-  const fetchOpps = async () => {
+  const fetchOpps = useCallback(async () => {
     try {
       const res = await fetch('/api/opportunities?status=all', {
         headers: { Authorization: `Bearer ${token}` }
@@ -67,9 +59,9 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       const res = await fetch('/api/settings', {
         headers: { Authorization: `Bearer ${token}` }
@@ -80,7 +72,15 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Failed to fetch settings');
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (token) {
+      fetchOpps();
+      fetchSettings();
+      checkHealth();
+    }
+  }, [token, fetchOpps, fetchSettings, checkHealth]);
 
   const saveSettings = async () => {
     setSavingSettings(true);

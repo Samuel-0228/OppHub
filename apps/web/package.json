@@ -19,7 +19,9 @@
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.5.0",
     "date-fns": "^4.1.0",
-    "react-markdown": "^10.1.0"
+    "react-markdown": "^10.1.0",
+    "@platform/types": "*",
+    "@platform/utils": "*"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
