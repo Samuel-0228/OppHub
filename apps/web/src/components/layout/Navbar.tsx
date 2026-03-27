@@ -1,11 +1,26 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { Menu, X, Search, Bell } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Menu, X, Search, Bell, LayoutDashboard, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token');
+    setIsAdmin(!!token);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_token');
+    setIsAdmin(false);
+    router.push('/');
+    router.refresh();
+  };
 
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
@@ -37,9 +52,24 @@ export default function Navbar() {
             <button className="p-2 text-gray-400 hover:text-blue-600 transition-colors">
               <Bell className="w-5 h-5" />
             </button>
-            <Link href="/login" className="ml-4 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
-              Admin Login
-            </Link>
+            {isAdmin ? (
+              <div className="flex items-center space-x-4">
+                <Link href="/admin" className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors">
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
+                </Link>
+                <button 
+                  onClick={handleLogout}
+                  className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <Link href="/login" className="ml-4 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
+                Admin Login
+              </Link>
+            )}
           </div>
 
           <div className="flex items-center md:hidden">
@@ -66,9 +96,23 @@ export default function Navbar() {
             <Link href="/events" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md">
               Events
             </Link>
-            <Link href="/login" className="block px-3 py-2 text-base font-medium text-blue-600 font-semibold">
-              Admin Login
-            </Link>
+            {isAdmin ? (
+              <>
+                <Link href="/admin" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md">
+                  Dashboard
+                </Link>
+                <button 
+                  onClick={handleLogout}
+                  className="block w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:bg-red-50 rounded-md"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link href="/login" className="block px-3 py-2 text-base font-medium text-blue-600 font-semibold">
+                Admin Login
+              </Link>
+            )}
           </div>
         </div>
       )}

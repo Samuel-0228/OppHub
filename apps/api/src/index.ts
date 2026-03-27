@@ -92,16 +92,16 @@ async function startServer() {
 
   // Login
   app.post("/api/login", async (req, res) => {
-    const { password } = req.body;
+    const { email, password } = req.body;
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: config.adminEmail,
+        email: email || config.adminEmail,
         password: password
       });
       if (error) throw error;
       res.json({ token: data.session?.access_token });
     } catch (error: any) {
-      res.status(401).json({ error: error.message || "Invalid password" });
+      res.status(401).json({ error: error.message || "Invalid credentials" });
     }
   });
 
