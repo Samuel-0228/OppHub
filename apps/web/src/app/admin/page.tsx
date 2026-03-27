@@ -124,8 +124,8 @@ export default function AdminDashboard() {
       } else {
         throw new Error(data.error || 'Sync failed');
       }
-    } catch (err) {
-      alert('Sync failed');
+    } catch (err: any) {
+      alert(err.message || 'Sync failed');
     } finally {
       setSyncing(false);
     }

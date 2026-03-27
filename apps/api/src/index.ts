@@ -111,11 +111,24 @@ async function startServer() {
   // Sync Route
   app.post("/api/sync", authenticate, async (req, res) => {
     const { botToken, chatId } = req.body;
+    console.log(`Sync started with botToken: ${botToken?.substring(0, 5)}... and chatId: ${chatId}`);
     try {
-      const { data: offsetData } = await supabase.from("settings").select("value").eq("key", "telegram_offset").maybeSingle();
+      const { data: offsetData, error: offsetError } = await supabase.from("settings").select("value").eq("key", "telegram_offset").maybeSingle();
+      if (offsetError) {
+        console.error("Failed to fetch telegram_offset:", offsetError);
+        return res.status(500).json({ error: `Supabase error (settings): ${offsetError.message}` });
+      }
       const offset = offsetData ? parseInt(offsetData.value) : 0;
+      console.log(`Fetching updates from Telegram with offset: ${offset}`);
+      
       const response = await axios.get(`https://api.telegram.org/bot${botToken}/getUpdates?offset=${offset}`);
+      if (!response.data.ok) {
+        console.error("Telegram API error:", response.data);
+        return res.status(500).json({ error: `Telegram API error: ${response.data.description}` });
+      }
+      
       const updates = response.data.result;
+      console.log(`Found ${updates.length} updates from Telegram.`);
       
       let importedCount = 0;
       let lastUpdateId = offset - 1;
@@ -126,11 +139,19 @@ async function startServer() {
         if (!message || !message.text) continue;
 
         const telegramId = message.message_id.toString();
-        const { data: existing } = await supabase.from("opportunities").select("id").eq("telegram_id", telegramId).maybeSingle();
+        const { data: existing, error: existingError } = await supabase.from("opportunities").select("id").eq("telegram_id", telegramId).maybeSingle();
+        if (existingError) {
+          console.error("Failed to check existing opportunity:", existingError);
+          continue;
+        }
         if (existing) continue;
 
+        console.log(`Categorizing message: ${message.text.substring(0, 50)}...`);
         const data = await categorizeOpportunity(message.text);
-        if (!data) continue;
+        if (!data) {
+          console.warn("Categorization returned null for message:", telegramId);
+          continue;
+        }
 
         const { error: insertError } = await supabase.from("opportunities").insert({
           telegram_id: telegramId,
@@ -146,14 +167,28 @@ async function startServer() {
           status: 'pending'
         });
 
-        if (!insertError) importedCount++;
+        if (insertError) {
+          console.error("Failed to insert opportunity:", insertError);
+        } else {
+          importedCount++;
+        }
       }
 
       if (lastUpdateId >= offset) {
-        await supabase.from("settings").upsert({ key: "telegram_offset", value: (lastUpdateId + 1).toString() });
+        const { error: upsertError } = await supabase.from("settings").upsert({ key: "telegram_offset", value: (lastUpdateId + 1).toString() });
+        if (upsertError) {
+          console.error("Failed to update telegram_offset:", upsertError);
+        }
       }
+      
+      console.log(`Sync completed. Imported ${importedCount} opportunities.`);
       res.json({ success: true, importedCount });
     } catch (error: any) {
+      console.error("Sync failed with error:", error.message);
+      if (error.response) {
+        console.error("Telegram API response error:", error.response.data);
+        return res.status(500).json({ error: `Telegram API error: ${error.response.data.description || error.message}` });
+      }
       res.status(500).json({ error: error.message });
     }
   });
