@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
+import Image from "next/image";
 
 async function getBlogPost(slug: string) {
   const { data, error } = await supabase
@@ -36,10 +37,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       </div>
 
       <div className="aspect-video w-full bg-gray-100 rounded-3xl overflow-hidden relative">
-        <img 
+        <Image 
           src={`https://picsum.photos/seed/${post.id}/1200/675`} 
           alt={post.title}
-          className="object-cover w-full h-full"
+          fill
+          className="object-cover"
           referrerPolicy="no-referrer"
         />
       </div>
