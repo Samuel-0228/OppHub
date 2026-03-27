@@ -108,6 +108,26 @@ async function startServer() {
   // Posts Routes
   app.use("/api/opportunities", postsRoutes);
 
+  // Test Bot Route
+  app.post("/api/test-bot", authenticate, async (req, res) => {
+    const { botToken, chatId } = req.body;
+    try {
+      const response = await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        chat_id: chatId,
+        text: "🔔 *OppHub Connection Test*\n\nIf you are seeing this message, your Telegram Bot is successfully connected to the OppHub Admin Dashboard!",
+        parse_mode: 'Markdown'
+      });
+      if (response.data.ok) {
+        res.json({ success: true });
+      } else {
+        res.status(400).json({ error: response.data.description });
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.description || error.message;
+      res.status(500).json({ error: msg });
+    }
+  });
+
   // Sync Route
   app.post("/api/sync", authenticate, async (req, res) => {
     const { botToken, chatId } = req.body;
@@ -120,6 +140,13 @@ async function startServer() {
       }
       const offset = offsetData ? parseInt(offsetData.value) : 0;
       console.log(`Fetching updates from Telegram with offset: ${offset}`);
+      
+      // Ensure no webhook is active before polling to avoid 409 Conflict
+      try {
+        await axios.get(`https://api.telegram.org/bot${botToken}/deleteWebhook`);
+      } catch (webhookError: any) {
+        console.warn("Failed to delete webhook (might not be set):", webhookError.message);
+      }
       
       const response = await axios.get(`https://api.telegram.org/bot${botToken}/getUpdates?offset=${offset}`);
       if (!response.data.ok) {
@@ -137,6 +164,21 @@ async function startServer() {
         lastUpdateId = update.update_id;
         const message = update.channel_post || update.message;
         if (!message || !message.text) continue;
+
+        // Handle /start command for connection verification
+        if (message.text.trim() === '/start') {
+          console.log(`Received /start from chat ${message.chat.id}. Sending confirmation...`);
+          try {
+            await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+              chat_id: message.chat.id,
+              text: "✅ *OppHub Bot is successfully connected!*\n\nI am now ready to sync opportunities from this channel/chat to the OppHub platform. \n\nClick 'Sync Now' in your Admin Dashboard to begin importing posts.",
+              parse_mode: 'Markdown'
+            });
+          } catch (replyError: any) {
+            console.error("Failed to send /start reply:", replyError.message);
+          }
+          continue; // Skip categorization for command messages
+        }
 
         const telegramId = message.message_id.toString();
         const { data: existing, error: existingError } = await supabase.from("opportunities").select("id").eq("telegram_id", telegramId).maybeSingle();

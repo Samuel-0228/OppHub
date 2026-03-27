@@ -12,7 +12,8 @@ import {
   Settings,
   Database,
   ExternalLink,
-  Loader2
+  Loader2,
+  Zap
 } from 'lucide-react';
 import { Post } from '@platform/types';
 import { cn } from '@/utils';
@@ -21,12 +22,38 @@ export default function AdminDashboard() {
   const [opps, setOpps] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [botToken, setBotToken] = useState('');
   const [chatId, setChatId] = useState('');
   const [savingSettings, setSavingSettings] = useState(false);
   const [health, setHealth] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
+
+  const handleTestBot = async () => {
+    if (!botToken || !chatId) return alert('Please enter Bot Token and Chat ID');
+    setTesting(true);
+    try {
+      const res = await fetch('/api/test-bot', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ botToken, chatId })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('✅ Test message sent successfully! Check your Telegram channel/chat.');
+      } else {
+        throw new Error(data.error || 'Test failed');
+      }
+    } catch (err: any) {
+      alert(`❌ Bot Test Failed: ${err.message}`);
+    } finally {
+      setTesting(false);
+    }
+  };
 
   useEffect(() => {
     const storedToken = localStorage.getItem('admin_token');
@@ -219,18 +246,26 @@ export default function AdminDashboard() {
             <button 
               onClick={saveSettings}
               disabled={savingSettings}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white text-[10px] font-bold rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {savingSettings ? <Loader2 className="animate-spin w-4 h-4" /> : <Database size={14} />}
-              Save Settings
+              {savingSettings ? <Loader2 className="animate-spin w-3 h-3" /> : <Database size={12} />}
+              Save
+            </button>
+            <button 
+              onClick={handleTestBot}
+              disabled={testing}
+              className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 text-[10px] font-bold rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {testing ? <Loader2 className="animate-spin w-3 h-3" /> : <Zap size={12} />}
+              Test
             </button>
             <button 
               onClick={handleSync}
               disabled={syncing}
-              className="flex-1 px-4 py-2 border border-blue-600 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 border border-blue-600 text-blue-600 text-[10px] font-bold rounded-lg hover:bg-blue-50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {syncing ? <RefreshCw className="animate-spin w-4 h-4" /> : <RefreshCw size={14} />}
-              Sync Now
+              {syncing ? <RefreshCw className="animate-spin w-3 h-3" /> : <RefreshCw size={12} />}
+              Sync
             </button>
           </div>
         </div>

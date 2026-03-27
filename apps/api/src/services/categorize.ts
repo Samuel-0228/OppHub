@@ -1,9 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
 import { config } from "../config/env.js";
 
-const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
-
 export const categorizeOpportunity = async (content: string) => {
+  const apiKey = config.geminiApiKey;
+  console.log(`Categorizing opportunity with API key present: ${!!apiKey}`);
+  if (!apiKey) {
+    console.error("Gemini API key is missing. Please set NEXT_PUBLIC_GEMINI_API_KEY.");
+    return null;
+  }
+  const ai = new GoogleGenAI({ apiKey });
   const prompt = `
     Extract structured information from this Telegram post about an opportunity.
     Return a JSON object with these fields:
