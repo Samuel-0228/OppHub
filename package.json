@@ -3,16 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "dev": "tsx apps/api/src/index.ts",
-    "build": "npm run build --workspaces",
-    "start": "node apps/api/src/index.ts",
-    "clean": "rm -rf dist",
-    "lint": "npm run lint --workspaces"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
