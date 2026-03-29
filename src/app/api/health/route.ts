@@ -13,6 +13,9 @@ export async function GET(request: Request) {
       configured: !!supabase,
       opportunities_table: false,
       settings_table: false
+    },
+    gemini: {
+      configured: !!(process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY)
     }
   };
 

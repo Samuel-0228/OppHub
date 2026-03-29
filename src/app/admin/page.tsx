@@ -177,7 +177,7 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(`Imported ${data.importedCount} new opportunities!`);
+        alert(data.message || `Imported ${data.importedCount} new opportunities!`);
         fetchOpps();
       } else {
         throw new Error(data.error || 'Sync failed');
@@ -243,6 +243,18 @@ export default function AdminDashboard() {
             System polls Telegram every 5 minutes automatically.
           </p>
           
+          {health && health.gemini && !health.gemini.configured && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-100 rounded-xl flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-yellow-600 uppercase tracking-wider">Gemini API Key Missing</p>
+                <p className="text-xs text-yellow-500 mt-1">
+                  Categorization will fail. Please set <strong>NEXT_PUBLIC_GEMINI_API_KEY</strong> in your Settings menu.
+                </p>
+              </div>
+            </div>
+          )}
+
           {health && health.supabase && (!health.supabase.opportunities_table || !health.supabase.settings_table) && (
             <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
