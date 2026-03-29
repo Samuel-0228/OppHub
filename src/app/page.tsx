@@ -5,6 +5,7 @@ import SearchBar from '@/components/filters/SearchBar';
 import CategoryFilter from '@/components/filters/CategoryFilter';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 interface HomePageProps {
   searchParams: Promise<{ q?: string; category?: string }>;

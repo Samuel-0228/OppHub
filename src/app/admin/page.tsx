@@ -26,6 +26,7 @@ export default function AdminDashboard() {
   const [botToken, setBotToken] = useState('');
   const [chatId, setChatId] = useState('');
   const [savingSettings, setSavingSettings] = useState(false);
+  const [settingWebhook, setSettingWebhook] = useState(false);
   const [health, setHealth] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
@@ -65,14 +66,19 @@ export default function AdminDashboard() {
   }, [router]);
 
   const checkHealth = useCallback(async () => {
+    if (!token) return;
     try {
-      const res = await fetch('/api/health');
+      const res = await fetch('/api/health', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const data = await res.json();
-      setHealth(data);
+      if (res.ok) {
+        setHealth(data);
+      }
     } catch (err) {
       console.error('Health check failed');
     }
-  }, []);
+  }, [token]);
 
   const fetchOpps = useCallback(async () => {
     try {
@@ -129,6 +135,31 @@ export default function AdminDashboard() {
       alert('Failed to save settings');
     } finally {
       setSavingSettings(false);
+    }
+  };
+
+  const handleSetWebhook = async () => {
+    if (!botToken) return alert('Please enter Bot Token');
+    setSettingWebhook(true);
+    try {
+      const res = await fetch('/api/telegram/webhook/set', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ botToken })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('✅ Webhook set successfully! Your website will now update automatically.');
+      } else {
+        throw new Error(data.error || 'Failed to set webhook');
+      }
+    } catch (err: any) {
+      alert(`❌ Webhook Setup Failed: ${err.message}`);
+    } finally {
+      setSettingWebhook(false);
     }
   };
 
@@ -212,7 +243,7 @@ export default function AdminDashboard() {
             System polls Telegram every 5 minutes automatically.
           </p>
           
-          {health && (!health.supabase.opportunities_table || !health.supabase.settings_table) && (
+          {health && health.supabase && (!health.supabase.opportunities_table || !health.supabase.settings_table) && (
             <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
               <div>
@@ -247,11 +278,12 @@ export default function AdminDashboard() {
               <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Channel ID</label>
               <input 
                 type="text" 
-                placeholder="Enter Chat ID" 
+                placeholder="e.g. -1001234567890" 
                 className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
                 value={chatId}
                 onChange={(e) => setChatId(e.target.value)}
               />
+              <p className="text-[9px] text-gray-400 italic">Must start with -100 for channels</p>
             </div>
           </div>
           <div className="flex gap-3 pt-2">
@@ -270,6 +302,14 @@ export default function AdminDashboard() {
             >
               {testing ? <Loader2 className="animate-spin w-3 h-3" /> : <Zap size={12} />}
               Test
+            </button>
+            <button 
+              onClick={handleSetWebhook}
+              disabled={settingWebhook}
+              className="flex-1 px-4 py-2 border border-orange-600 text-orange-600 text-[10px] font-bold rounded-lg hover:bg-orange-50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {settingWebhook ? <Loader2 className="animate-spin w-3 h-3" /> : <Settings size={12} />}
+              Set Webhook
             </button>
             <button 
               onClick={handleSync}

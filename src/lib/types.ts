@@ -14,6 +14,8 @@ export interface Post {
   is_pinned: boolean;
   is_featured: boolean;
   view_count: number;
+  slug?: string;
+  image_url?: string;
   created_at: string;
 }
 

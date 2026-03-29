@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, Building2, Calendar, ArrowRight } from 'lucide-react';
 import { Post } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
@@ -11,9 +12,21 @@ export default function OpportunityCard({ opportunity }: OpportunityCardProps) {
   return (
     <Link 
       href={opportunity.category === 'Blog' ? `/blogs/${opportunity.id}` : `/opportunities/${opportunity.id}`}
-      className="group bg-[#F5F5F5] p-8 rounded-none border-none transition-all hover:bg-gray-100 flex flex-col h-full"
+      className="group bg-[#F5F5F5] rounded-none border-none transition-all hover:bg-gray-100 flex flex-col h-full overflow-hidden"
     >
-      <div className="flex items-center gap-2 mb-6">
+      {opportunity.image_url && (
+        <div className="relative w-full aspect-video overflow-hidden">
+          <Image 
+            src={opportunity.image_url} 
+            alt={opportunity.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            referrerPolicy="no-referrer"
+          />
+        </div>
+      )}
+      <div className="p-8 flex flex-col flex-1">
+        <div className="flex items-center gap-2 mb-6">
         <span className="text-[10px] font-black uppercase tracking-widest text-orange-600">
           {opportunity.category}
         </span>
@@ -48,6 +61,7 @@ export default function OpportunityCard({ opportunity }: OpportunityCardProps) {
         View Details
         <ArrowRight className="ml-2 w-3 h-3" />
       </div>
+    </div>
     </Link>
   );
 }
